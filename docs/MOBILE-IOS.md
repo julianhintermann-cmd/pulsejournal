@@ -68,6 +68,30 @@ Notes for the iOS 26 style mobile layer (viewports below 768 px). The audit and 
 - Install hint: solid iOS card above the tab bar with the share glyph.
 - The old `bottom-tab-bar.tsx` was removed; the desktop/tablet `TopBar` is hidden below 768 px.
 
+### M4 – Stack navigation
+
+- `src/components/ios/stack.tsx`. Instead of intercepting routes + a parallel `@stack` slot (every detail route and
+  its data loading would exist twice), the outgoing screen is frozen as a static DOM copy the moment React removes
+  it: `<StackProbe>` is the first child of `<main>`, and its layout-effect cleanup runs while the old DOM is still
+  attached and still at its scroll position. This covers every navigation source (links, `router.push`, history).
+  The copy is plain inert DOM, so it can never re-read the new URL (the "frozen location" rule) – duplicated,
+  half-transparent lists are impossible by construction.
+- Push: the new screen slides in from the right over the frozen previous one (−30 % parallax, 12 % dim, edge
+  shadow), 500 ms `cubic-bezier(0.32, 0.72, 0, 1)`. Pop: the frozen leaving screen slides out to the right over the
+  real previous screen, whose scroll position is restored before the first paint.
+- Swipe back (home-screen app only): starts in the left 30 % of the screen, never on inputs, charts, horizontal
+  scrollers or swipeable rows; the real screen follows the finger 1:1 over the frozen previous screen; completes
+  above 35 % progress or 0.5 px/ms, otherwise springs back. Per-tab stacks keep up to 8 frozen screens.
+- Sheet routes (`/trades/new`, `/trades/[id]/edit`) are presented: the previous screen stays visible behind,
+  scaled to 0.94, rounded and dimmed (card stack); the route scrolls inside a sheet with 38 px top corners; ✕ in
+  the nav bar dismisses (forms can intercept it for a dirty check). Deep links are presented over black.
+- Safari tabs and reduced motion get a 150 ms crossfade instead (Safari animates its own edge swipe); tab switches
+  are instant.
+- Race rules: a touch during a running transition settles it first (the tap lands on the final layout); every
+  route commit cancels a running transition before starting the next; layout changes happen after pointer release.
+  Stress test (tab tap → row tap after 0–22 frames, 4× CPU throttling, invariants: one screen, no active layers,
+  no running animations, the active tab matches the URL): 100/100 passed.
+
 ## Deviations from the brief
 
 - Playwright WebKit could not be downloaded in the build sandbox (`cdn.playwright.dev` is blocked there). Local

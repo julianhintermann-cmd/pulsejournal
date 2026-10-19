@@ -66,7 +66,10 @@ export function InstallHint() {
   return (
     <>
       {/* iOS card above the floating tab bar (solid: glass is reserved for the bars themselves). */}
-      <div className="fixed inset-x-[var(--ios-margin)] bottom-[calc(max(var(--sab)-8px,12px)+74px)] z-30 flex items-center gap-2.5 rounded-[22px] bg-[var(--ios-cell)] py-2 pr-2 pl-2.5 shadow-overlay md:hidden">
+      <div
+        data-snapshot-skip
+        className="fixed inset-x-[var(--ios-margin)] bottom-[calc(max(var(--sab)-8px,12px)+74px)] z-30 flex items-center gap-2.5 rounded-[22px] bg-[var(--ios-cell)] py-2 pr-2 pl-2.5 shadow-overlay md:hidden"
+      >
         <Logo className="size-9 rounded-[9px]" />
         <button type="button" onClick={() => setOpen(true)} className="flex min-w-0 flex-1 flex-col text-left">
           <span className="truncate text-[15px] font-semibold">Als App installieren</span>

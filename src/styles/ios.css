@@ -703,3 +703,106 @@
     transform: scale(var(--title-scale, 1));
   }
 }
+
+/* ---------- Stack navigation layers (section 4.3; see src/components/ios/stack.tsx) ---------- */
+@media (max-width: 767px) {
+  /* The live screen sits above the frozen previous screen and must be opaque. */
+  #main {
+    position: relative;
+    z-index: 1;
+    background-color: var(--bg);
+  }
+  /* Web-style page fade is replaced by the stack transitions (or a 150 ms crossfade in Safari tabs). */
+  .animate-page {
+    animation: none;
+  }
+  .ios-stack-front {
+    box-shadow: -12px 0 32px rgba(0, 0, 0, 0.22);
+    will-change: transform;
+  }
+  .ios-stack-under,
+  .ios-stack-over {
+    position: fixed;
+    inset: 0;
+    display: none;
+    overflow: hidden;
+    pointer-events: none;
+    contain: strict;
+  }
+  .ios-stack-under {
+    z-index: 0;
+    background: var(--bg);
+  }
+  .ios-stack-under[data-presenting] {
+    background: #000;
+  }
+  .ios-stack-over {
+    z-index: 20;
+  }
+  .ios-stack-under[data-active],
+  .ios-stack-over[data-active] {
+    display: block;
+  }
+  .ios-stack-dim {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: #000;
+    opacity: 0;
+  }
+  .ios-stack-main-dim {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .ios-snapshot {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: var(--bg);
+    will-change: transform;
+  }
+  .ios-stack-over .ios-snapshot {
+    background: transparent;
+  }
+  .ios-stack-over .ios-snapshot > .ios-snapshot__inner > .ios-main:not(.ios-main--sheet) {
+    background: var(--bg);
+    box-shadow: -12px 0 32px rgba(0, 0, 0, 0.22);
+  }
+  .ios-stack-under[data-presenting] .ios-snapshot {
+    transform: scale(0.94);
+    border-radius: 14px;
+  }
+
+  /* ---------- Presented sheet routes (Neuer Trade, Trade bearbeiten) ---------- */
+  :root[data-presented] #main,
+  .ios-main--sheet {
+    position: fixed;
+    inset: calc(var(--sat) + 10px) 0 0 0;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 38px 38px 0 0;
+    padding-top: 64px;
+    padding-bottom: calc(var(--sab) + 24px);
+    background-color: var(--bg);
+    box-shadow:
+      0 0 0 0.5px var(--ios-separator),
+      0 -10px 40px rgba(0, 0, 0, 0.3);
+  }
+  :root[data-presented] .ios-navbar {
+    top: 10px;
+  }
+  :root[data-presented] .ios-edge-top {
+    top: calc(var(--sat) + 10px);
+    height: 84px;
+    border-radius: 38px 38px 0 0;
+  }
+  :root[data-presented] body {
+    background: #000;
+  }
+}

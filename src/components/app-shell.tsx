@@ -5,12 +5,13 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { LargeTitle, NavBar } from "@/components/ios/nav-bar";
+import { StackProbe, useStackNavigation } from "@/components/ios/stack";
 import { GlassTabBar } from "@/components/ios/tab-bar";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { RouteSkeleton } from "@/components/skeletons";
 import { TopBar } from "@/components/top-bar";
-import { tabFor } from "@/lib/ios/nav";
+import { isSheetRoute, tabFor } from "@/lib/ios/nav";
 import { rememberScreen, rememberScroll, takeScrollRestore, trackScreen } from "@/lib/ios/nav-memory";
 import { cn } from "@/lib/utils";
 
@@ -66,11 +67,14 @@ export function AppShell({ initialCollapsed, children }: { initialCollapsed: boo
     return () => document.removeEventListener("click", onClick);
   }, []);
 
+  useStackNavigation(pathname);
+
   // Phone navigation memory: last screen per tab, scroll position per screen, restore after a tab switch.
   useEffect(() => {
     trackScreen(pathname);
     const url = () => window.location.pathname + window.location.search;
-    rememberScreen(tabFor(pathname), url());
+    // Sheets (Neuer Trade, bearbeiten) are presented over a tab, they are not a tab's screen.
+    if (!isSheetRoute(pathname)) rememberScreen(tabFor(pathname), url());
     const restore = takeScrollRestore(url());
     if (restore != null) requestAnimationFrame(() => window.scrollTo(0, restore));
     let frame = 0;
@@ -79,7 +83,7 @@ export function AppShell({ initialCollapsed, children }: { initialCollapsed: boo
       frame = requestAnimationFrame(() => {
         frame = 0;
         rememberScroll(url(), window.scrollY);
-        rememberScreen(tabFor(window.location.pathname), url());
+        if (!isSheetRoute(window.location.pathname)) rememberScreen(tabFor(window.location.pathname), url());
       });
     };
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -112,11 +116,12 @@ export function AppShell({ initialCollapsed, children }: { initialCollapsed: boo
           id="main"
           className={cn(
             // Phones: content runs under the status bar and the floating bars (padding keeps it reachable).
-            "flex-1 pt-[calc(var(--sat)+52px)] pr-[calc(var(--ios-margin)+var(--sar))] pb-[calc(max(var(--sab)-8px,12px)+86px)] pl-[calc(var(--ios-margin)+var(--sal))]",
+            "ios-main flex-1 pt-[calc(var(--sat)+52px)] pr-[calc(var(--ios-margin)+var(--sar))] pb-[calc(max(var(--sab)-8px,12px)+86px)] pl-[calc(var(--ios-margin)+var(--sal))]",
             "md:px-8 md:pt-6 md:pb-10",
             navigated && "animate-page",
           )}
         >
+          <StackProbe pathname={pathname} />
           <LargeTitle pathname={pathname} />
           {pendingPath ? <RouteSkeleton pathname={pendingPath} /> : children}
         </main>

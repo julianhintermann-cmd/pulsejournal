@@ -1,25 +1,27 @@
 "use client";
 
-import { ChevronLeft, Search } from "lucide-react";
+import { ChevronLeft, Search, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
 import { GlobalFilterSheetButton } from "@/components/global-filter";
 import { GlassButton, GlassSurface } from "@/components/ios/glass";
 import { filterMode } from "@/components/nav-items";
-import { hasLargeTitle, mobileTitle, parentOf } from "@/lib/ios/nav";
+import { hasLargeTitle, isSheetRoute, mobileTitle, parentOf } from "@/lib/ios/nav";
 import { previousScreen } from "@/lib/ios/nav-memory";
 
 /** Height of the bar row below the status bar (px). */
 export const NAV_ROW = 52;
 
+/** Scroll offset of the screen: the document, or <main> while a sheet scrolls inside it. */
 function useScrollY() {
   const [y, setY] = useState(0);
   useEffect(() => {
     let frame = 0;
     const update = () => {
       frame = 0;
-      const value = window.scrollY;
+      const main = document.getElementById("main");
+      const value = document.documentElement.hasAttribute("data-presented") && main ? main.scrollTop : window.scrollY;
       setY((prev) => (Math.abs(prev - value) < 1 ? prev : value));
       // Rubber-band overscroll at the top makes the large title grow slightly (anchored left), like iOS.
       document.documentElement.style.setProperty(
@@ -31,9 +33,9 @@ function useScrollY() {
       if (!frame) frame = requestAnimationFrame(update);
     };
     update();
-    window.addEventListener("scroll", onScroll, { passive: true });
+    document.addEventListener("scroll", onScroll, { passive: true, capture: true });
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      document.removeEventListener("scroll", onScroll, { capture: true });
       if (frame) cancelAnimationFrame(frame);
     };
   }, []);
@@ -56,6 +58,31 @@ export function BackButton({ parent }: { parent: string }) {
   );
 }
 
+/** ✕ of a presented sheet: back to the presenting screen. Forms register their own handler (dirty check). */
+export function SheetCloseButton({ parent }: { parent: string }) {
+  const router = useRouter();
+  return (
+    <GlassButton
+      aria-label="Abbrechen"
+      onClick={() => {
+        const handler = sheetCloseHandler;
+        if (handler) return handler();
+        const previous = previousScreen();
+        if (previous && !isSheetRoute(previous)) router.back();
+        else router.push(parent);
+      }}
+    >
+      <X className="!size-[22px]" strokeWidth={2.2} />
+    </GlassButton>
+  );
+}
+
+let sheetCloseHandler: (() => void) | null = null;
+/** Lets a sheet route (e.g. the trade form) intercept ✕ to ask before discarding changes. */
+export function setSheetCloseHandler(handler: (() => void) | null) {
+  sheetCloseHandler = handler;
+}
+
 /**
  * iOS 26 navigation bar for phones (section 4.2): no solid background – a scroll edge effect fades in once content
  * moves underneath; glass back circle on the left, inline title in the middle (after the large title scrolled
@@ -69,13 +96,16 @@ export function NavBar({ onOpenCommand }: { onOpenCommand: () => void }) {
   const mode = filterMode(pathname);
   const title = mobileTitle(pathname);
   const inline = !large || y > 40;
+  const sheet = isSheetRoute(pathname);
 
   return (
     <div className="md:hidden" data-ios-chrome>
       <div className="ios-edge-top" data-visible={y > 4 ? "" : undefined} />
       <div className="ios-navbar" data-inline-title={inline ? "" : undefined}>
         <div className="ios-navbar__row">
-          <div className="flex items-center">{parent ? <BackButton parent={parent} /> : null}</div>
+          <div className="flex items-center">
+            {sheet && parent ? <SheetCloseButton parent={parent} /> : parent ? <BackButton parent={parent} /> : null}
+          </div>
           {large ? (
             <p className="ios-navbar__title" aria-hidden="true">
               {title}
@@ -83,8 +113,8 @@ export function NavBar({ onOpenCommand }: { onOpenCommand: () => void }) {
           ) : (
             <h1 className="ios-navbar__title">{title}</h1>
           )}
-          <div className="flex items-center justify-end">
-            {mode ? (
+          <div className="flex items-center justify-end" id="ios-navbar-trailing">
+            {sheet ? null : mode ? (
               <GlassSurface shape="capsule" className="flex h-11 items-center">
                 <Suspense>
                   <GlobalFilterSheetButton mode={mode} />

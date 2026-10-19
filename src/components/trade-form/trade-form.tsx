@@ -866,7 +866,10 @@ export function TradeForm({
 
       {/* Spacer so the fixed mobile action bar never covers content */}
       <div aria-hidden="true" className="h-16 md:hidden" />
-      <div className="fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-30 border-t border-border bg-bg/85 px-4 py-3 backdrop-blur-[20px] md:sticky md:bottom-0 md:-mx-8 md:mt-2 md:px-8">
+      <div
+        data-snapshot-skip
+        className="fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-30 border-t border-border bg-bg/85 px-4 py-3 backdrop-blur-[20px] md:sticky md:bottom-0 md:-mx-8 md:mt-2 md:px-8"
+      >
         <div className="mx-auto flex max-w-3xl items-center justify-end gap-2">
           <p className="hidden min-w-0 flex-1 truncate text-small text-muted-foreground sm:block" aria-live="polite">
             {saving ?? (dirty ? "Ungespeicherte Änderungen" : "")}
