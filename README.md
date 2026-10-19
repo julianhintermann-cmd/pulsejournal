@@ -31,7 +31,7 @@ home NAS, keeps everything in SQLite plus an uploads folder on one volume and in
    ```yaml
    services:
      pulse-journal:
-       image: ghcr.io/<OWNER>/pulse-journal:latest
+       image: ghcr.io/julianhintermann-cmd/pulse-journal:latest
        container_name: pulse-journal
        restart: unless-stopped
        ports:

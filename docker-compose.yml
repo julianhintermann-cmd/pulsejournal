@@ -1,6 +1,6 @@
 services:
   pulse-journal:
-    image: ghcr.io/<OWNER>/pulse-journal:latest
+    image: ghcr.io/julianhintermann-cmd/pulse-journal:latest
     container_name: pulse-journal
     restart: unless-stopped
     ports:
