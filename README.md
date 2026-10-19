@@ -26,7 +26,7 @@ home NAS, keeps everything in SQLite plus an uploads folder on one volume and in
 ## Quick start on a NAS (Docker Compose)
 
 1. Create a folder on the NAS, e.g. `/volume1/docker/pulse-journal`, and put this `docker-compose.yml` into it
-   (replace `<OWNER>` with the GitHub account that publishes the image, in lower case):
+   (forks publish to `ghcr.io/<their-account-in-lower-case>/pulse-journal`):
 
    ```yaml
    services:
