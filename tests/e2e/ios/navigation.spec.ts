@@ -29,22 +29,54 @@ test("tab bar switches tabs and marks the current one", async ({ page }) => {
 });
 
 test("push to a trade and pop back with the back button keeps the scroll position", async ({ page }) => {
+  // Scroll and history log, printed with the assertion when it fails.
+  await page.addInitScript(() => {
+    const w = window as Window & { __scrollLog?: string[] };
+    w.__scrollLog = [];
+    const log = (entry: string) =>
+      w.__scrollLog!.push(`${Math.round(performance.now())} ${location.pathname} ${entry}`);
+    addEventListener("popstate", () => log(`popstate y=${Math.round(scrollY)}`), true);
+    let last = -1;
+    addEventListener(
+      "scroll",
+      () => {
+        const y = Math.round(scrollY);
+        if (y !== last) log(`scroll y=${(last = y)}`);
+      },
+      true,
+    );
+  });
   await page.goto("/trades?range=all");
   // The app restores positions itself; the browser's own (late, in Safari) restore must not interfere.
   await expect.poll(() => page.evaluate(() => history.scrollRestoration)).toBe("manual");
   await page.evaluate(() => window.scrollTo(0, 600));
-  await page.waitForTimeout(200);
-  const row = page.locator('.ios-swipe a[href^="/trades/"]').filter({ visible: true }).nth(3);
-  await row.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  // A row that is fully on screen, so tapping it does not scroll.
+  const href = await page.evaluate(() => {
+    const rows = [...document.querySelectorAll<HTMLAnchorElement>('.ios-swipe a[href^="/trades/"]')];
+    const row = rows.find((a) => {
+      const r = a.getBoundingClientRect();
+      return r.top > 160 && r.bottom < innerHeight - 160;
+    });
+    return row?.getAttribute("href") ?? null;
+  });
+  expect(href).not.toBeNull();
   const scrollBefore = await page.evaluate(() => Math.round(window.scrollY));
-  await tap(page, row);
+  expect(scrollBefore).toBeGreaterThan(400);
+  await tap(page, page.locator(`.ios-swipe a[href="${href}"]`));
   await expect(page).toHaveURL(/\/trades\/[0-9a-f-]{36}$/);
   await settled(page);
   await expect(page.getByRole("button", { name: "Zurück" })).toBeVisible();
   await tap(page, page.getByRole("button", { name: "Zurück" }));
   await expect(page).toHaveURL(/\/trades(\?.*)?$/);
   await settled(page);
-  await expect.poll(() => page.evaluate(() => Math.round(window.scrollY))).toBeGreaterThan(scrollBefore - 60);
+  const log = () => page.evaluate(() => (window as Window & { __scrollLog?: string[] }).__scrollLog?.join("\n"));
+  await expect
+    .poll(() => page.evaluate(() => Math.round(window.scrollY)), { message: "scroll position after the pop" })
+    .toBeGreaterThan(scrollBefore - 60)
+    .catch(async (error: Error) => {
+      throw new Error(`${error.message}\nscroll log:\n${await log()}`);
+    });
 });
 
 test("edge swipe pops, a short swipe snaps back", async ({ page, finger }) => {

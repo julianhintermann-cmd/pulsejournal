@@ -178,26 +178,29 @@ function restoreScroll() {
 }
 
 /**
- * Scrolls to `y`; while the screen is still shorter than that (loading state, images), keeps restoring as it grows,
- * for up to 2 s or until the user touches or scrolls.
+ * Scrolls to `y` and holds it briefly: while the screen is still shorter (loading state, images) it keeps restoring as
+ * the screen grows, and a jump nobody touched for (WebKit's UI-side scrolling can apply its own stored position after
+ * ours, like iOS Safari) is undone. Ends after 2 s (at least 600 ms once reached) or at the first touch, wheel or key.
  */
 export function scrollToWhenReady(y: number) {
   window.scrollTo(0, y);
-  if (Math.abs(window.scrollY - y) < 2 || typeof ResizeObserver === "undefined") return;
-  const observer = new ResizeObserver(() => {
-    window.scrollTo(0, y);
-    if (Math.abs(window.scrollY - y) < 2) stop();
-  });
+  const started = performance.now();
+  const reached = () => Math.abs(window.scrollY - y) < 2;
+  const reapply = () => {
+    if (!reached()) window.scrollTo(0, y);
+    else if (performance.now() - started > 600) stop();
+  };
+  const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(reapply);
   const timer = window.setTimeout(() => stop(), 2000);
   function stop() {
-    observer.disconnect();
+    observer?.disconnect();
     window.clearTimeout(timer);
-    window.removeEventListener("touchstart", stop);
-    window.removeEventListener("wheel", stop);
+    window.removeEventListener("scroll", reapply);
+    for (const type of ["touchstart", "wheel", "keydown"]) window.removeEventListener(type, stop);
   }
-  observer.observe(document.body);
-  window.addEventListener("touchstart", stop, { passive: true });
-  window.addEventListener("wheel", stop, { passive: true });
+  observer?.observe(document.body);
+  window.addEventListener("scroll", reapply, { passive: true });
+  for (const type of ["touchstart", "wheel", "keydown"]) window.addEventListener(type, stop, { passive: true });
 }
 
 function classify(from: string, to: string): Kind {

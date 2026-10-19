@@ -193,7 +193,10 @@ Notes for the iOS 26 style mobile layer (viewports below 768 px). The audit and 
   came back at the top after a pop: the browser's own scroll restoration (`history.scrollRestoration = "auto"`, with
   the position stored after the push had reset it) ran after the app's restore. Phones now use `"manual"` and the
   app restores on every history jump (also Safari's back button to another tab), keeps retrying while the screen is
-  still shorter than the saved position, and never stores a position under the URL of the screen being left.
+  still shorter than the saved position, holds the position for 600 ms against a late jump nobody touched for
+  (WebKit's UI-side scrolling, as in iOS Safari) and never stores a position under the URL of the screen being left.
+  Checked in real WebKit (WebKitGTK 2.52 via WebKitWebDriver at 402 px, Safari tab and home-screen mode, with and
+  without a simulated late engine restore).
   Tablet and desktop keep `"auto"`.
 - Desktop/tablet: `python3 tests/visual/compare.py BEFORE AFTER` on two `capture.mjs --set desktop` runs. Only the
   known dynamic regions differ (time-of-day greeting, current time in the trade form, build date and session count
