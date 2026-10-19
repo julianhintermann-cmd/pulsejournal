@@ -35,7 +35,12 @@ export const test = base.extend<Fixtures>({
   pageErrors: [
     async ({ page }, provide) => {
       const errors: string[] = [];
-      page.on("pageerror", (error) => errors.push(String(error)));
+      page.on("pageerror", (error) => {
+        const text = String(error);
+        // WebKit reports Next.js prefetches/RSC requests aborted by a navigation as page errors.
+        if (/Fetch API cannot load .*_rsc=.* due to access control checks/.test(text)) return;
+        errors.push(text);
+      });
       await provide(errors);
       expect(errors, "uncaught page errors").toEqual([]);
     },
@@ -205,7 +210,7 @@ export async function centre(locator: Locator): Promise<Point> {
 }
 
 /** Taps the centre of an element once it stopped moving (sheets and menus spring in). */
-export async function tap(page: Page, locator: Locator) {
+export async function tap(_page: Page, locator: Locator) {
   await expect(locator).toBeVisible();
   let previous = "";
   await expect
@@ -220,6 +225,6 @@ export async function tap(page: Page, locator: Locator) {
       { intervals: [50], timeout: 5_000 },
     )
     .toBe(true);
-  const { x, y } = await centre(locator);
-  await page.touchscreen.tap(x, y);
+  // locator.tap() maps to the visual viewport, which mobile WebKit shifts while a field is focused.
+  await locator.tap();
 }

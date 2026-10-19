@@ -221,7 +221,7 @@ test("text meets WCAG AA contrast", async ({ page }) => {
         let onAccent = false;
         for (let q: Element | null = el; q; q = q.parentElement) {
           // A full-cover inset shadow (e.g. the calendar heat shade) paints over the element's own background.
-          const shade = getComputedStyle(q).boxShadow.match(/^(.+?\)) 0px 0px 0px (\d+)px inset$/);
+          const shade = getComputedStyle(q).boxShadow.match(/^(?:inset )?(.+?\)) 0px 0px 0px ([\d.]+)px(?: inset)?$/);
           if (shade && Number(shade[2]) >= 200) {
             const c = parse(shade[1]);
             if (c && c[3] > 0) layers.push(c);

@@ -271,3 +271,6 @@ home-screen app need a device. Before a release, on an iPhone with iOS 26 (Safar
 - White text on the brand accent (#4F7CFF / #3B63E6) is 3.7–3.8:1, below 4.5:1 for small text – the same as Apple's
   own prominent buttons on systemBlue. Kept for the brand; held to 3:1 in the contrast test.
 - Playwright WebKit gestures are synthetic events (no touch-move API in WebKit); the real-touch path runs in Chromium.
+- WebKit test quirks: no `mouse.wheel` in mobile WebKit (scrolling via `scrollTo`), taps go through `locator.tap()`
+  (the visual viewport shifts while a field is focused), and aborted Next.js RSC prefetches ("Fetch API cannot load …
+  access control checks") are not counted as page errors.

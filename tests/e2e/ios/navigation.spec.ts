@@ -30,7 +30,6 @@ test("tab bar switches tabs and marks the current one", async ({ page }) => {
 
 test("push to a trade and pop back with the back button keeps the scroll position", async ({ page }) => {
   await page.goto("/trades?range=all");
-  await page.mouse.wheel(0, 600);
   await page.evaluate(() => window.scrollTo(0, 600));
   await page.waitForTimeout(200);
   const row = page.locator('.ios-swipe a[href^="/trades/"]').filter({ visible: true }).nth(3);
