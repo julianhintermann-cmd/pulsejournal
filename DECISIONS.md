@@ -86,7 +86,7 @@ Assumptions and choices made where the specification left room. Format: file pat
 - `src/lib/backup.ts` – The backup schema version is the number of shipped migrations; a backup from a newer schema is rejected.
 - `src/lib/backup.ts` – Retention counts only automatic daily files (`pulse-backup-YYYY-MM-DD.zip`); manual downloads are not stored on the server.
 - `src/lib/backup.ts` – A restore swaps the contents of the uploads folder instead of renaming the folder, so `/data/uploads` can be a separate mount on another disk.
-- `docker/entrypoint.sh` – Ownership is checked separately for `/data`, `/data/uploads` and `/data/backups`, because the latter two may be separate mounts.
+- `docker/entrypoint.sh` – Ownership and access are checked separately for `/data`, `/data/uploads` and `/data/backups` (they may be separate mounts); a folder the app user cannot read and write is chowned and gets `u+rwX`, which also fixes NAS shares whose ACLs deny access despite the right owner.
 - `src/app/api/import/backup/route.ts` – After a restore all sessions are deleted, so every device has to log in again.
 
 ## Delivery

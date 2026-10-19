@@ -1,4 +1,4 @@
-import { Download, FileDown } from "lucide-react";
+import { CircleAlert, Download, FileDown } from "lucide-react";
 import type { Metadata } from "next";
 
 import { BackupDownload, BackupRestore } from "@/components/import-export/backup-section";
@@ -13,6 +13,7 @@ import { env } from "@/lib/env";
 import { filterToQuery } from "@/lib/filter";
 import { getFilter, type SearchParams } from "@/lib/filter-server";
 import { formatDateTime, plural } from "@/lib/format";
+import { log } from "@/lib/log";
 import { getSettings } from "@/lib/settings";
 import { formatBytes } from "@/lib/storage-info";
 import { csvMappingSchema } from "@/lib/validation";
@@ -40,7 +41,11 @@ export default async function ImportExportPage({ searchParams }: { searchParams:
       }
     });
   const logs = db.select().from(importLog).orderBy(desc(importLog.createdAt)).limit(10).all();
-  const backups = await listBackups();
+  // An unreadable backups folder (e.g. NAS share permissions) must not take down the whole page.
+  const backups = await listBackups().catch((error: unknown) => {
+    log.error("Backups folder could not be read", error);
+    return null;
+  });
   const accountName = filter.accountId ? accounts.find((a) => a.id === filter.accountId)?.name : null;
 
   return (
@@ -92,7 +97,12 @@ export default async function ImportExportPage({ searchParams }: { searchParams:
             <p className="text-small text-muted-foreground">
               Täglich um 03:30 ({tz}); die letzten {env.backupKeepDays} werden aufbewahrt.
             </p>
-            {backups.length === 0 ? (
+            {backups === null ? (
+              <p className="flex items-start gap-2 text-body text-loss">
+                <CircleAlert className="mt-0.5 size-4 shrink-0" />
+                Der Backup-Ordner ist nicht lesbar. Prüfe die Ordnerrechte von /data/backups auf dem Server.
+              </p>
+            ) : backups.length === 0 ? (
               <p className="text-body text-muted-foreground">Noch keine automatischen Backups vorhanden.</p>
             ) : (
               <ul className="flex flex-col divide-y divide-border rounded-[12px] border border-border">
