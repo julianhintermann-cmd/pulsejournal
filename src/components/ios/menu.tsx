@@ -18,7 +18,10 @@ export type MenuItem = {
 };
 export type MenuSection = { items: MenuItem[] };
 
-const SPRING = { type: "spring", stiffness: 520, damping: 36 } as const;
+/** The iOS ease (as --ease-ios and the tab bar pill): a soft glide without overshoot. */
+const EASE_IOS = [0.32, 0.72, 0, 1] as const;
+const OPEN = { duration: 0.36, ease: EASE_IOS } as const;
+const CLOSE = { duration: 0.22, ease: EASE_IOS } as const;
 const MENU_WIDTH = 250;
 
 type Placement = { top: number; left: number; originX: number; originY: number; above: boolean };
@@ -87,10 +90,12 @@ function MenuPanel({
           width: MENU_WIDTH,
           transformOrigin: placement ? `${placement.originX}px ${placement.originY}px` : "50% 0",
         }}
-        initial={{ opacity: 0, scale: 0.35 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.35, transition: { duration: 0.18 } }}
-        transition={SPRING}
+        // Starts only once it is measured and placed, so it unfolds from the button and not from a corner.
+        initial={{ opacity: 0, scale: 0.6 }}
+        animate={placement ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.6 }}
+        exit={{ opacity: 0, scale: 0.72, transition: CLOSE }}
+        transition={{ ...OPEN, opacity: { duration: 0.2, ease: EASE_IOS } }}
+        data-placed={placement ? "" : undefined}
       >
         {sections.map((section, s) => (
           <div key={s} className={cn("flex flex-col", s > 0 && "ios-menu__section")}>
@@ -269,8 +274,8 @@ export function ContextMenu({
                     }}
                     initial={{ scale: 1 }}
                     animate={{ scale: 1.02 }}
-                    exit={{ scale: 1 }}
-                    transition={SPRING}
+                    exit={{ scale: 1, transition: CLOSE }}
+                    transition={OPEN}
                     // A static copy of the row (no React tree, no handlers).
                     dangerouslySetInnerHTML={{ __html: state.html }}
                   />

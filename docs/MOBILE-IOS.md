@@ -211,6 +211,10 @@ Notes for the iOS 26 style mobile layer (viewports below 768 px). The audit and 
   glides without overshoot (340 ms) with a centred 10 % stretch; collapse/expand has no overshoot either.
 - Collapse on scroll: expands again only after 16 px of upward scrolling, ignores the rubber band at both ends and
   re-renders only when a flag changes (it re-rendered the tab bar on every scroll frame).
+- Menus (filter, "…", long press): opened stiffly – the `.glass` transform transition fought the script animation,
+  and the first frame started before the panel was placed. The panel now waits for its position, unfolds from the
+  button with the iOS ease (360 ms, 60 % → 100 %, no overshoot), the rows settle in 70 ms later, and it closes the
+  same way (220 ms).
 - Quick trade form: the date/time fields overflowed the card – iOS gives `datetime-local` an intrinsic minimum width
   wider than a `1fr` column. On phones the columns are `minmax(0, …)` (time 1.5 : 1), date fields may shrink and use
   16 px (the no-zoom size). Tablet and desktop keep their grid.

@@ -999,6 +999,9 @@
 
 /* ---------- Menus and context menus (section 5.3) ---------- */
 .ios-menu {
+  /* Animated by script (unfold from the button): the glass press transition on transform would fight it. */
+  transition: background-color 200ms var(--ease-ios);
+  will-change: transform, opacity;
   position: fixed;
   z-index: 71;
   display: flex;
@@ -1032,6 +1035,21 @@
 }
 .ios-menu__item:disabled {
   opacity: 0.4;
+}
+/* The rows settle in just after the panel opened. */
+.ios-menu[data-placed] .ios-menu__item {
+  animation: ios-menu-item 260ms 70ms var(--ease-ios) both;
+}
+@keyframes ios-menu-item {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ios-menu[data-placed] .ios-menu__item {
+    animation: none;
+  }
 }
 .ios-context {
   position: fixed;
