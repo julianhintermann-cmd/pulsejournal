@@ -1,0 +1,312 @@
+/*
+ * iOS 26 layer for phones (below 768 px). Tablet and desktop never match these rules.
+ * Colours are iOS system colours mapped onto the app tokens, typography follows the iOS text styles and scales with
+ * Dynamic Type through --dt (set by src/lib/ios/boot-script.ts). See docs/MOBILE-IOS.md.
+ */
+
+:root {
+  --dt: 1;
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --kb: 0px;
+  --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
+  /* Spring (stiffness 400, damping 32) sampled for linear(); falls back to --ease-ios. */
+  --ease-spring: var(--ease-ios);
+  --ios-margin: 16px;
+}
+
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    --ease-spring: linear(
+      0,
+      0.0137 1.1%,
+      0.0547 2.3%,
+      0.2034 5%,
+      0.4067 8.1%,
+      0.6037 11.4%,
+      0.7686 15%,
+      0.8862 18.7%,
+      0.9592 22.6%,
+      1.0011 26.9%,
+      1.0181 31.3%,
+      1.0198 36.4%,
+      1.0081 46.6%,
+      1.0005 61.2%,
+      0.9996 100%
+    );
+  }
+}
+
+@media (max-width: 767px) {
+  /* ---------- Colours: iOS system semantics (dark) ---------- */
+  :root {
+    color-scheme: dark;
+    --bg: #000000;
+    --surface: #1c1c1e;
+    --surface-2: #2c2c2e;
+    --surface-3: #3a3a3c;
+    --border: rgba(84, 84, 88, 0.65);
+    --text: #ffffff;
+    --text-muted: rgba(235, 235, 245, 0.6);
+    --text-faint: rgba(235, 235, 245, 0.3);
+    --accent: #4f7cff;
+    --accent-soft: rgba(79, 124, 255, 0.2);
+    --profit: #30d158;
+    --profit-soft: rgba(48, 209, 88, 0.18);
+    --loss: #ff453a;
+    --loss-soft: rgba(255, 69, 58, 0.18);
+    --be: #ff9f0a;
+    --be-soft: rgba(255, 159, 10, 0.18);
+    --focus-ring: #4f7cff;
+    --card-shadow: none;
+    --overlay-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+    --scrim: rgba(0, 0, 0, 0.45);
+    --ios-fill: rgba(118, 118, 128, 0.24);
+    --ios-fill-2: rgba(118, 118, 128, 0.32);
+    --ios-separator: rgba(84, 84, 88, 0.65);
+    --ios-grouped: #000000;
+    --ios-cell: #1c1c1e;
+    --ios-cell-2: #2c2c2e;
+    --ios-label-2: rgba(235, 235, 245, 0.6);
+    --ios-label-3: rgba(235, 235, 245, 0.3);
+  }
+
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #f2f2f7;
+    --surface: #ffffff;
+    --surface-2: #f2f2f7;
+    --surface-3: #e5e5ea;
+    --border: rgba(60, 60, 67, 0.29);
+    --text: #000000;
+    --text-muted: rgba(60, 60, 67, 0.6);
+    --text-faint: rgba(60, 60, 67, 0.3);
+    --accent: #3b63e6;
+    --accent-soft: rgba(59, 99, 230, 0.12);
+    --profit: #34c759;
+    --profit-soft: rgba(52, 199, 89, 0.15);
+    --loss: #ff3b30;
+    --loss-soft: rgba(255, 59, 48, 0.12);
+    --be: #ff9500;
+    --be-soft: rgba(255, 149, 0, 0.14);
+    --focus-ring: #3b63e6;
+    --card-shadow: none;
+    --overlay-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
+    --scrim: rgba(0, 0, 0, 0.2);
+    --ios-fill: rgba(120, 120, 128, 0.12);
+    --ios-fill-2: rgba(120, 120, 128, 0.2);
+    --ios-separator: rgba(60, 60, 67, 0.29);
+    --ios-grouped: #f2f2f7;
+    --ios-cell: #ffffff;
+    --ios-cell-2: #f2f2f7;
+    --ios-label-2: rgba(60, 60, 67, 0.6);
+    --ios-label-3: rgba(60, 60, 67, 0.3);
+  }
+
+  /* ---------- iOS text styles (Dynamic Type via --dt) ---------- */
+  :root {
+    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
+    --ios-large-title: calc(34px * var(--dt));
+    --ios-title1: calc(28px * var(--dt));
+    --ios-title2: calc(22px * var(--dt));
+    --ios-title3: calc(20px * var(--dt));
+    --ios-headline: calc(17px * var(--dt));
+    --ios-body: calc(17px * var(--dt));
+    --ios-callout: calc(16px * var(--dt));
+    --ios-subheadline: calc(15px * var(--dt));
+    --ios-footnote: calc(13px * var(--dt));
+    --ios-caption1: calc(12px * var(--dt));
+    --ios-caption2: calc(11px * var(--dt));
+
+    /* App tokens mapped onto the iOS styles. */
+    --text-display: var(--ios-large-title);
+    --text-display--line-height: 1.2;
+    --text-display--font-weight: 700;
+    --text-display--letter-spacing: 0;
+    --text-h1: var(--ios-title1);
+    --text-h1--line-height: 1.21;
+    --text-h1--font-weight: 700;
+    --text-h1--letter-spacing: 0;
+    --text-h2: var(--ios-title3);
+    --text-h2--line-height: 1.25;
+    --text-h2--font-weight: 600;
+    --text-h3: var(--ios-headline);
+    --text-h3--line-height: 1.29;
+    --text-h3--font-weight: 600;
+    --text-body: var(--ios-body);
+    --text-body--line-height: 1.29;
+    --text-small: var(--ios-footnote);
+    --text-small--line-height: 1.38;
+    --text-small--font-weight: 400;
+    --text-kpi: var(--ios-title1);
+    --text-kpi--line-height: 1.21;
+    --text-kpi--font-weight: 700;
+    --text-kpi--letter-spacing: 0;
+    --text-kpi-sm: var(--ios-title2);
+    --text-kpi-sm--line-height: 1.27;
+    --text-kpi-sm--font-weight: 700;
+    --text-kpi-sm--letter-spacing: 0;
+    --text-sm: var(--ios-subheadline);
+    --text-base: var(--ios-body);
+  }
+
+  html {
+    background-color: var(--bg);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: var(--ios-body);
+    line-height: 1.29;
+    font-feature-settings: normal;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Fixed pixel sizes used across the components follow the closest iOS style and Dynamic Type. */
+  .text-\[11px\] {
+    font-size: var(--ios-caption2);
+  }
+  .text-\[12px\] {
+    font-size: var(--ios-caption1);
+  }
+  .text-\[13px\] {
+    font-size: var(--ios-footnote);
+  }
+  .text-\[14px\] {
+    font-size: var(--ios-subheadline);
+  }
+  .text-\[15px\] {
+    font-size: var(--ios-body);
+  }
+
+  .tabular-nums,
+  [class*="tabular-nums"] {
+    font-feature-settings: "tnum";
+  }
+
+  /* ---------- Shape: solid cards with iOS radii and no outlines ---------- */
+  .card {
+    border-color: transparent;
+    border-radius: 22px;
+    background-color: var(--surface);
+  }
+
+  /* ---------- Web tells off ---------- */
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  a,
+  button,
+  input,
+  label,
+  select,
+  summary,
+  textarea,
+  [role="button"],
+  [role="tab"],
+  [role="radio"],
+  [role="checkbox"],
+  [role="switch"],
+  [role="menuitem"],
+  [role="option"] {
+    touch-action: manipulation;
+  }
+
+  /* Chrome is not selectable and shows no callout; written content (notes, journal, markdown) stays selectable. */
+  nav,
+  header,
+  button,
+  label,
+  summary,
+  [role="button"],
+  [role="tab"],
+  [role="radio"],
+  [role="menuitem"],
+  [role="option"],
+  [data-ios-chrome],
+  a:not(.markdown a) {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  img {
+    -webkit-touch-callout: none;
+  }
+
+  .markdown,
+  .markdown *,
+  [data-selectable],
+  [data-selectable] * {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* No zoom on focus: form fields are at least 16 px (iOS body size by default). */
+  input,
+  select,
+  textarea {
+    font-size: max(16px, var(--ios-body)) !important;
+  }
+
+  /* Focus rings only for keyboard focus, never after a tap. */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Horizontal inner scrollers keep native momentum without visible scrollbars. */
+  .ios-hscroll {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ios-hscroll::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Larger phones (≥ 428 px) use 20 px side margins like iOS. */
+@media (min-width: 428px) and (max-width: 767px) {
+  :root {
+    --ios-margin: 20px;
+  }
+}
+
+/* "System" theme on a light-mode phone. */
+@media (max-width: 767px) and (prefers-color-scheme: light) {
+  :root[data-theme="system"] {
+    color-scheme: light;
+    --bg: #f2f2f7;
+    --surface: #ffffff;
+    --surface-2: #f2f2f7;
+    --surface-3: #e5e5ea;
+    --border: rgba(60, 60, 67, 0.29);
+    --text: #000000;
+    --text-muted: rgba(60, 60, 67, 0.6);
+    --text-faint: rgba(60, 60, 67, 0.3);
+    --accent: #3b63e6;
+    --accent-soft: rgba(59, 99, 230, 0.12);
+    --profit: #34c759;
+    --profit-soft: rgba(52, 199, 89, 0.15);
+    --loss: #ff3b30;
+    --loss-soft: rgba(255, 59, 48, 0.12);
+    --be: #ff9500;
+    --be-soft: rgba(255, 149, 0, 0.14);
+    --focus-ring: #3b63e6;
+    --card-shadow: none;
+    --overlay-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
+    --scrim: rgba(0, 0, 0, 0.2);
+    --ios-fill: rgba(120, 120, 128, 0.12);
+    --ios-fill-2: rgba(120, 120, 128, 0.2);
+    --ios-separator: rgba(60, 60, 67, 0.29);
+    --ios-grouped: #f2f2f7;
+    --ios-cell: #ffffff;
+    --ios-cell-2: #f2f2f7;
+    --ios-label-2: rgba(60, 60, 67, 0.6);
+    --ios-label-3: rgba(60, 60, 67, 0.3);
+  }
+}

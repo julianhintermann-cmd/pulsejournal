@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, sessionCookieOptions, shouldUseSecureCookie } from "@/lib/auth/cookie";
 
 const PUBLIC_PATHS = ["/login", "/setup", "/api/health", "/manifest.webmanifest", "/sw.js", "/offline.html"];
-const PUBLIC_PREFIXES = ["/icons/", "/_next/"];
+const PUBLIC_PREFIXES = ["/icons/", "/launch/", "/_next/"];
 
 function isPublic(pathname: string) {
   return PUBLIC_PATHS.includes(pathname) || PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
@@ -39,5 +39,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|icons/|api/import/backup|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|icons/|launch/|api/import/backup|favicon.ico).*)"],
 };

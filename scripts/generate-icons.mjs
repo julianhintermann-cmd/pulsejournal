@@ -82,3 +82,25 @@ const ico = buildIco([
 await writeFile(path.join(outDir, "favicon.ico"), ico);
 
 console.log(`Generated ${outputs.length + 1} icons in ${path.relative(root, outDir)}`);
+
+// iOS launch screens (apple-touch-startup-image): app background with the centred logo, dark and light, so a cold
+// start from the home screen never flashes white. Devices and colours are shared with src/app/layout.tsx.
+const launch = JSON.parse(await readFile(path.join(root, "src", "lib", "ios", "launch-screens.json"), "utf8"));
+const launchDir = path.join(root, "public", "launch");
+await mkdir(launchDir, { recursive: true });
+let launchCount = 0;
+for (const device of launch.devices) {
+  const width = device.width * device.ratio;
+  const height = device.height * device.ratio;
+  const logoSize = 96 * device.ratio;
+  const logo = await render(logoSvg, logoSize);
+  for (const [scheme, color] of Object.entries(launch.colors)) {
+    const png = await sharp({ create: { width, height, channels: 3, background: color } })
+      .composite([{ input: logo, left: Math.round((width - logoSize) / 2), top: Math.round((height - logoSize) / 2) }])
+      .png({ compressionLevel: 9, palette: true })
+      .toBuffer();
+    await writeFile(path.join(launchDir, `launch-${width}x${height}-${scheme}.png`), png);
+    launchCount += 1;
+  }
+}
+console.log(`Generated ${launchCount} launch screens in ${path.relative(root, launchDir)}`);

@@ -1,0 +1,17 @@
+{
+  "colors": { "dark": "#000000", "light": "#F2F2F7" },
+  "devices": [
+    { "name": "iPhone 16/17 Pro Max", "width": 440, "height": 956, "ratio": 3 },
+    { "name": "iPhone Air", "width": 420, "height": 912, "ratio": 3 },
+    { "name": "iPhone 16/17 Pro, 17", "width": 402, "height": 874, "ratio": 3 },
+    { "name": "iPhone 14/15 Pro Max, 15/16 Plus", "width": 430, "height": 932, "ratio": 3 },
+    { "name": "iPhone 14/15 Pro, 15, 16", "width": 393, "height": 852, "ratio": 3 },
+    { "name": "iPhone 12/13 Pro Max, 14 Plus", "width": 428, "height": 926, "ratio": 3 },
+    { "name": "iPhone 12–14, 16e", "width": 390, "height": 844, "ratio": 3 },
+    { "name": "iPhone X/XS/11 Pro, 12/13 mini", "width": 375, "height": 812, "ratio": 3 },
+    { "name": "iPhone XS Max, 11 Pro Max", "width": 414, "height": 896, "ratio": 3 },
+    { "name": "iPhone XR, 11", "width": 414, "height": 896, "ratio": 2 },
+    { "name": "iPhone 8 Plus", "width": 414, "height": 736, "ratio": 3 },
+    { "name": "iPhone SE 2/3, 8", "width": 375, "height": 667, "ratio": 2 }
+  ]
+}

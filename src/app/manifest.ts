@@ -10,8 +10,9 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#0A0B0F",
-    theme_color: "#0A0B0F",
+    // Launch background of installed apps = the mobile app background (no flash); see src/lib/ios/theme-color.ts.
+    background_color: "#000000",
+    theme_color: "#000000",
     lang: "de-CH",
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },

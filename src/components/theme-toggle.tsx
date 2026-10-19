@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { THEMES, type Theme } from "@/lib/db/schema";
+import { themeColorDescriptors } from "@/lib/ios/theme-color";
 import { THEME_LABELS } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 import { updateTheme } from "@/server/actions/settings";
@@ -13,12 +14,14 @@ const ICONS = { dark: Moon, light: Sun, system: Monitor } as const;
 
 function applyTheme(theme: Theme) {
   document.documentElement.dataset.theme = theme;
-  const dark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   for (const meta of document.querySelectorAll('meta[name="theme-color"]')) meta.remove();
-  const meta = document.createElement("meta");
-  meta.name = "theme-color";
-  meta.content = dark ? "#0A0B0F" : "#F6F7F9";
-  document.head.appendChild(meta);
+  for (const { media, color } of themeColorDescriptors(theme)) {
+    const meta = document.createElement("meta");
+    meta.name = "theme-color";
+    meta.content = color;
+    if (media) meta.media = media;
+    document.head.appendChild(meta);
+  }
 }
 
 /** Dunkel / Hell / System segmented control; applies instantly and persists in the settings. */

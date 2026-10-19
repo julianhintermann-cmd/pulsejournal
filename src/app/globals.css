@@ -81,8 +81,6 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
@@ -126,6 +124,13 @@
   --shadow-overlay: var(--overlay-shadow);
   --shadow-card: var(--card-shadow);
 
+  --ease-pulse: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Typography and font tokens are plain variables (not inlined) so the iOS layer can remap them below 768 px. */
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
   /* Typography scale (section 9.2) */
   --text-display: 32px;
   --text-display--line-height: 38px;
@@ -155,8 +160,6 @@
   --text-kpi-sm--line-height: 28px;
   --text-kpi-sm--font-weight: 600;
   --text-kpi-sm--letter-spacing: -0.01em;
-
-  --ease-pulse: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 @utility tabular-nums {
@@ -353,3 +356,6 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* iOS 26 mobile layer (below 768 px only). */
+@import "../styles/ios.css";

@@ -1,5 +1,6 @@
 "use client";
 
+import { IosRuntime } from "@/components/ios/ios-runtime";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +11,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       {children}
       <Toaster />
       <ServiceWorkerRegister />
+      <IosRuntime />
     </TooltipProvider>
   );
 }
