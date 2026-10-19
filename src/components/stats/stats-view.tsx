@@ -150,7 +150,7 @@ export function StatsView({
 
   return (
     <Tabs value={tab} onValueChange={setTab}>
-      <TabsList className="w-full justify-start md:w-fit">
+      <TabsList className="ios-chip-tabs w-full justify-start md:w-fit">
         {TABS.map((t) => (
           <TabsTrigger key={t.value} value={t.value}>
             {t.label}

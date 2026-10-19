@@ -3,10 +3,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { CalendarMonth } from "@/components/calendar-month";
+import { PhoneHero } from "@/components/dashboard/phone-hero";
 import { DailyPnlChart, EquityChart } from "@/components/charts/lazy";
 import { DirectionChip } from "@/components/direction-chip";
 import { CandlesIllustration, EmptyState } from "@/components/empty-state";
 import { InstallHint } from "@/components/install-hint";
+import { InsetGroupedList, ListRow, ListSection } from "@/components/ios/list";
 import { KpiCard, WinLossDonut } from "@/components/kpi-card";
 import { PnlValue } from "@/components/pnl-value";
 import { RelativeTime } from "@/components/relative-time";
@@ -99,17 +101,36 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     data.curve.map((c) => c.balance),
     60,
   );
+  // Phone hero: cumulative trade P&L of the period, at most ~180 points (first and last kept).
+  const cumulativeCurve = data.curve.reduce<{ ts: number; value: number }[]>((acc, c) => {
+    acc.push({ ts: c.ts, value: (acc[acc.length - 1]?.value ?? 0) + (c.tradePnl ?? 0) });
+    return acc;
+  }, []);
+  const step = Math.max(1, Math.ceil(cumulativeCurve.length / 180));
+  const heroPoints = cumulativeCurve.filter((_, i) => i % step === 0 || i === cumulativeCurve.length - 1);
 
   return (
     <div className="flex flex-col gap-3 md:gap-4">
-      <div className="flex flex-col gap-0.5">
+      <div className="flex flex-col gap-0.5 max-md:hidden">
         <h1 className="text-h1">
           {hello.text}, {user.username}
         </h1>
         <p className="text-body text-muted-foreground">{hello.date}</p>
       </div>
+      <p className="-mt-3 mb-1 text-[15px] text-muted-foreground md:hidden">
+        {hello.text}, {user.username} · {hello.date}
+      </p>
 
       <InstallHint />
+
+      <PhoneHero
+        netPnl={m.netPnl}
+        currency={currency}
+        periodLabel={filter.label}
+        points={heroPoints}
+        startBalance={data.curve[0]?.balance ?? null}
+        timeZone={tz}
+      />
 
       {scope.others.length > 0 ? (
         <div className="flex flex-wrap items-center gap-2 rounded-control border border-border bg-surface px-3 py-2 text-small text-muted-foreground">
@@ -132,6 +153,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           delta={p ? delta(m.netPnl, p.netPnl) : null}
           sub={plural(m.trades, "Trade", "Trades")}
           chart={<Sparkline values={curveValues} height={36} />}
+          className="max-md:hidden"
         />
         <KpiCard
           label="Win Rate"
@@ -161,10 +183,20 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           delta={p ? delta(m.expectancy, p.expectancy) : null}
           sub={`${formatR(m.expectancyR)} pro Trade`}
         />
+        {/* Phones show the net P&L in the hero above, so the fourth tile is Total R. */}
+        <KpiCard
+          label="Total R"
+          value={m.totalR}
+          format={{ kind: "r" }}
+          delta={p ? delta(m.totalR, p.totalR) : null}
+          sub={plural(m.trades, "Trade", "Trades")}
+          className="md:hidden"
+        />
       </div>
 
       <Section
         title="Equity-Kurve"
+        className="max-md:hidden"
         action={
           data.curve.length > 1 ? (
             <span className="text-small text-muted-foreground tabular-nums">
@@ -218,7 +250,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-3">
         <Section
           title="Letzte Trades"
-          className="lg:col-span-2"
+          className="max-md:hidden lg:col-span-2"
           action={
             <Link
               href="/trades"
@@ -258,7 +290,65 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             </ul>
           )}
         </Section>
-        <div className="flex flex-col gap-3 md:gap-4">
+        <InsetGroupedList className="mt-3 md:hidden">
+          <ListSection header="Letzte Trades">
+            {data.recent.length === 0 ? (
+              <ListRow title={<span className="text-muted-foreground">Keine Trades im Zeitraum.</span>} />
+            ) : (
+              data.recent.slice(0, 5).map((t) => (
+                <ListRow
+                  key={t.id}
+                  href={`/trades/${t.id}`}
+                  prefetch={false}
+                  title={
+                    <span className="flex items-center gap-2">
+                      <span className="font-semibold">{t.symbol}</span>
+                      <DirectionChip direction={t.direction} size="sm" />
+                    </span>
+                  }
+                  subtitle={<RelativeTime ts={t.closedAt ?? t.openedAt} timeZone={tz} />}
+                  value={
+                    t.netPnl != null ? (
+                      <PnlValue value={t.netPnl} currency={t.currency} className="font-semibold" />
+                    ) : (
+                      <span className="text-accent">Offen</span>
+                    )
+                  }
+                />
+              ))
+            )}
+            <ListRow href="/trades" title={<span className="text-accent">Alle anzeigen</span>} />
+          </ListSection>
+          {data.setups.length > 0 ? (
+            <ListSection header="Top Setups">
+              {data.setups.map((s) => (
+                <ListRow
+                  key={s.key}
+                  href={`/playbooks/${s.key}`}
+                  prefetch={false}
+                  icon={<span className="h-8 w-1 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />}
+                  title={s.name}
+                  subtitle={`${plural(s.trades, "Trade", "Trades")} · ${formatPercent(s.winRate)}`}
+                  value={<RValue value={s.totalR} className="font-semibold" />}
+                />
+              ))}
+            </ListSection>
+          ) : null}
+          <ListSection
+            header="Top-Fehler"
+            footer={data.mistakes.length === 0 ? "Keine kostspieligen Fehler im Zeitraum. Weiter so!" : undefined}
+          >
+            {data.mistakes.map((mk) => (
+              <ListRow
+                key={mk.id}
+                title={mk.name}
+                subtitle={`kostet dich ${formatMoney(Math.abs(mk.netPnl), currency, { decimals: 0 })}`}
+                value={`${mk.trades}×`}
+              />
+            ))}
+          </ListSection>
+        </InsetGroupedList>
+        <div className="flex flex-col gap-3 max-md:hidden md:gap-4">
           <Section title="Top Setups">
             {data.setups.length === 0 ? (
               <div className="flex flex-col items-start gap-2 py-2">

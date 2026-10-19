@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { AutosaveIndicator, type AutosaveState } from "@/components/autosave-indicator";
 import { FormField } from "@/components/form-field";
+import { NavBarActions } from "@/components/ios/nav-bar";
 import { MarkdownEditor } from "@/components/markdown-editor";
 import { RatingInput } from "@/components/rating-input";
 import { Input } from "@/components/ui/input";
@@ -152,8 +153,12 @@ export function JournalDayEditor({
     <div className="flex flex-col gap-3 md:gap-4">
       <AutosaveIndicator
         state={state}
-        className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom)+84px)] z-30 shadow-overlay md:right-8 md:bottom-6"
+        className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom)+84px)] z-30 shadow-overlay max-md:hidden md:right-8 md:bottom-6"
       />
+      {/* Phones: "Gespeichert ✓" sits in the nav bar like Notes. */}
+      <NavBarActions>
+        <AutosaveIndicator state={state} className="h-7 text-[13px]" />
+      </NavBarActions>
 
       <section className="card flex flex-col gap-5 p-4 md:p-5">
         <h2 className="text-h2">Vor der Session</h2>

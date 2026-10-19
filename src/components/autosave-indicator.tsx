@@ -1,8 +1,7 @@
 import { Check, CircleAlert } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-
 import { Spinner } from "@/components/spinner";
+import { cn } from "@/lib/utils";
 
 export type AutosaveState = "idle" | "pending" | "saving" | "saved" | "error";
 

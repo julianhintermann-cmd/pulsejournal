@@ -15,7 +15,15 @@ import { Button } from "@/components/ui/button";
 import { isOpeningSide } from "@/lib/calc/trade";
 import { adjacentTrades, getTradeDetail } from "@/lib/db/queries";
 import { getFilter, type SearchParams } from "@/lib/filter-server";
-import { formatDateTime, formatDecimal, formatDuration, formatMoney, formatNumber, formatPrice } from "@/lib/format";
+import {
+  formatDateTime,
+  formatDecimal,
+  formatDuration,
+  formatMoney,
+  formatNumber,
+  formatPrice,
+  formatR,
+} from "@/lib/format";
 import { SESSION_LABELS } from "@/lib/sessions";
 import { getSettings } from "@/lib/settings";
 import { cn } from "@/lib/utils";
@@ -130,7 +138,20 @@ export default async function TradeDetailPage({
             <RValue value={trade.rMultiple} className="text-h3" />
           </div>
         </div>
-        <TradeActions id={id} prevId={prevId} nextId={nextId} />
+        <TradeActions
+          id={id}
+          prevId={prevId}
+          nextId={nextId}
+          shareText={[
+            `${instrument.symbol} ${trade.direction === "long" ? "Long" : "Short"}`,
+            trade.netPnl != null ? `Netto P&L ${formatMoney(trade.netPnl, currency, { signed: true })}` : "Offen",
+            trade.rMultiple != null ? formatR(trade.rMultiple) : null,
+            detail.playbook?.name,
+            formatDateTime(trade.openedAt, tz),
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        />
       </header>
 
       <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
@@ -142,7 +163,7 @@ export default async function TradeDetailPage({
           ) : null}
 
           <Card title="Details">
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3">
+            <dl className="ios-info grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3">
               <Info label="Einstieg Ø">{formatPrice(trade.entryAvg)}</Info>
               <Info label="Ausstieg Ø">{formatPrice(trade.exitAvg)}</Info>
               <Info label="Menge">
@@ -262,7 +283,7 @@ export default async function TradeDetailPage({
           ) : null}
 
           <Card title="Psychologie">
-            <dl className="grid grid-cols-2 gap-4">
+            <dl className="ios-info grid grid-cols-2 gap-4">
               <Info label="Emotion vorher">{trade.emotionBefore ?? "–"}</Info>
               <Info label="Emotion nachher">{trade.emotionAfter ?? "–"}</Info>
               <Info label="Selbstvertrauen">

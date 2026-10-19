@@ -23,7 +23,7 @@ import { TradesTable } from "@/components/trades/trades-table";
 import { Button } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
 import type { TradeRow } from "@/lib/db/queries";
-import { dayKey, formatDayKey, formatPercent, plural } from "@/lib/format";
+import { dayKey, formatDayKey, formatMoney, formatPercent, formatR, plural } from "@/lib/format";
 import { RESULT_LABELS } from "@/lib/labels";
 import { SESSION_LABELS, SESSION_ORDER } from "@/lib/sessions";
 import { winRate } from "@/lib/stats/metrics";
@@ -58,30 +58,41 @@ function Summary({ rows }: { rows: TradeRow[] }) {
   const totalR = closed.reduce((a, r) => a + (r.rMultiple ?? 0), 0);
   const sums = sumByCurrency(rows);
   return (
-    <div className="card grid grid-cols-2 gap-3 p-4 sm:grid-cols-4 md:px-5">
-      <div className="flex flex-col">
-        <span className="text-small text-muted-foreground">Trades</span>
-        <span className="text-h3 tabular-nums">{rows.length}</span>
+    <>
+      {/* Phones: one footnote line at the end of the list. */}
+      <p className="px-4 text-center text-[13px] text-muted-foreground tabular-nums md:hidden">
+        {[
+          plural(rows.length, "Trade", "Trades"),
+          ...sums.map(([currency, value]) => formatMoney(value, currency, { signed: true })),
+          `Win Rate ${formatPercent(rate)}`,
+          `Total ${formatR(totalR)}`,
+        ].join(" · ")}
+      </p>
+      <div className="card grid grid-cols-2 gap-3 p-4 max-md:hidden sm:grid-cols-4 md:px-5">
+        <div className="flex flex-col">
+          <span className="text-small text-muted-foreground">Trades</span>
+          <span className="text-h3 tabular-nums">{rows.length}</span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-small text-muted-foreground">Netto P&L</span>
+          {sums.length === 0 ? (
+            <span className="text-h3 text-muted-foreground">–</span>
+          ) : (
+            sums.map(([currency, value]) => (
+              <PnlValue key={currency} value={value} currency={currency} className="text-h3" />
+            ))
+          )}
+        </div>
+        <div className="flex flex-col">
+          <span className="text-small text-muted-foreground">Win Rate</span>
+          <span className="text-h3 tabular-nums">{formatPercent(rate)}</span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-small text-muted-foreground">Total R</span>
+          <RValue value={totalR} className="text-h3" />
+        </div>
       </div>
-      <div className="flex flex-col">
-        <span className="text-small text-muted-foreground">Netto P&L</span>
-        {sums.length === 0 ? (
-          <span className="text-h3 text-muted-foreground">–</span>
-        ) : (
-          sums.map(([currency, value]) => (
-            <PnlValue key={currency} value={value} currency={currency} className="text-h3" />
-          ))
-        )}
-      </div>
-      <div className="flex flex-col">
-        <span className="text-small text-muted-foreground">Win Rate</span>
-        <span className="text-h3 tabular-nums">{formatPercent(rate)}</span>
-      </div>
-      <div className="flex flex-col">
-        <span className="text-small text-muted-foreground">Total R</span>
-        <RValue value={totalR} className="text-h3" />
-      </div>
-    </div>
+    </>
   );
 }
 
@@ -227,6 +238,7 @@ export function TradesView({ rows, options, compact }: { rows: TradeRow[]; optio
   const { timeZone } = useApp();
   const filters = useMemo(() => parseTradeFilters(new URLSearchParams(searchParams.toString())), [searchParams]);
   const [query, setQuery] = useState(filters.q);
+  const [searching, setSearching] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selection, setSelection] = useState<RowSelectionState>({});
   const [bulk, setBulk] = useState<"tags" | "setup" | "delete" | null>(null);
@@ -351,9 +363,14 @@ export function TradesView({ rows, options, compact }: { rows: TradeRow[]; optio
               ref={searchRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => setSearching(true)}
+              onBlur={() => setSearching(false)}
+              type="search"
+              enterKeyHint="search"
+              autoCorrect="off"
               placeholder="Symbol oder Notiz suchen"
               aria-label="Trades durchsuchen"
-              className="h-11 w-full rounded-control border border-border bg-surface pr-9 pl-9 text-base outline-none placeholder:text-faint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:h-10 md:text-[14px]"
+              className="h-11 w-full rounded-control border border-border bg-surface pr-9 pl-9 text-base outline-none placeholder:text-faint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring max-md:h-9 max-md:rounded-[10px] max-md:border-transparent max-md:bg-[var(--ios-fill)] max-md:focus-visible:outline-none md:h-10 md:text-[14px] [&::-webkit-search-cancel-button]:hidden"
             />
             {query ? (
               <button
@@ -366,7 +383,29 @@ export function TradesView({ rows, options, compact }: { rows: TradeRow[]; optio
               </button>
             ) : null}
           </div>
-          <Button variant="outline" onClick={() => setSheetOpen(true)} className="relative" aria-label="Filter">
+          {searching ? (
+            <button
+              type="button"
+              className="shrink-0 px-1 text-[17px] text-accent md:hidden"
+              onPointerDown={(e) => e.preventDefault()}
+              onClick={() => {
+                setQuery("");
+                searchRef.current?.blur();
+                setSearching(false);
+              }}
+            >
+              Abbrechen
+            </button>
+          ) : null}
+          <Button
+            variant="outline"
+            onClick={() => setSheetOpen(true)}
+            className={cn(
+              "relative max-md:size-9 max-md:rounded-full max-md:border-transparent max-md:bg-[var(--ios-fill)] max-md:px-0",
+              searching && "max-md:hidden",
+            )}
+            aria-label="Filter"
+          >
             <Filter /> <span className="hidden sm:inline">Filter</span>
             {activeCount > 0 ? (
               <span className="ml-0.5 inline-flex size-5 items-center justify-center rounded-full bg-accent text-[11px] font-semibold text-white">
@@ -376,7 +415,7 @@ export function TradesView({ rows, options, compact }: { rows: TradeRow[]; optio
           </Button>
         </div>
         {chips.length > 0 ? (
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="ios-hscroll flex flex-wrap items-center gap-1.5 max-md:-mx-[var(--ios-margin)] max-md:flex-nowrap max-md:px-[var(--ios-margin)]">
             {chips.map((chip) => (
               <button
                 key={chip.key}

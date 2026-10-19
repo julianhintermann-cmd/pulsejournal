@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 
 const FILTER_KEYS = ["range", "account", "from", "to"];
 
-function useFilterState() {
+export function useFilterState() {
   const { persistedFilter } = useApp();
   const searchParams = useSearchParams();
   return useMemo(
@@ -26,7 +26,7 @@ function useFilterState() {
   );
 }
 
-function useApplyFilter() {
+export function useApplyFilter() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -48,7 +48,7 @@ function rangeLabel(state: FilterState) {
   return RANGE_LABELS[state.range];
 }
 
-function todayKey() {
+export function todayKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }

@@ -32,12 +32,13 @@ export function LoginForm({ next }: { next: string | null }) {
   return (
     <form onSubmit={onSubmit} className="card flex flex-col gap-5 p-6 sm:p-8" noValidate>
       <div className="flex flex-col gap-1">
-        <h1 className="text-h1">Willkommen zurück</h1>
-        <p className="text-body text-muted-foreground">Melde dich an, um dein Journal zu öffnen.</p>
+        <h1 className="text-h1 max-md:text-center max-md:text-[34px] max-md:leading-tight">Willkommen zurück</h1>
+        <p className="text-body text-muted-foreground max-md:text-center">Melde dich an, um dein Journal zu öffnen.</p>
       </div>
       <FormField label="Benutzername" htmlFor="username" error={errors.username?.message}>
         <Input
           id="username"
+          enterKeyHint="next"
           autoComplete="username"
           autoCapitalize="none"
           autoCorrect="off"
@@ -49,6 +50,7 @@ export function LoginForm({ next }: { next: string | null }) {
       <FormField label="Passwort" htmlFor="password" error={errors.password?.message}>
         <Input
           id="password"
+          enterKeyHint="go"
           type="password"
           autoComplete="current-password"
           aria-invalid={!!errors.password}

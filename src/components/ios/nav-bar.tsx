@@ -3,6 +3,7 @@
 import { ChevronLeft, Search, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { GlobalFilterSheetButton } from "@/components/global-filter";
 import { GlassButton, GlassSurface } from "@/components/ios/glass";
@@ -113,7 +114,8 @@ export function NavBar({ onOpenCommand }: { onOpenCommand: () => void }) {
           ) : (
             <h1 className="ios-navbar__title">{title}</h1>
           )}
-          <div className="flex items-center justify-end" id="ios-navbar-trailing">
+          <div className="flex items-center justify-end gap-2">
+            <div id="ios-navbar-trailing" className="flex items-center gap-2 empty:hidden" />
             {sheet ? null : mode ? (
               <GlassSurface shape="capsule" className="flex h-11 items-center">
                 <Suspense>
@@ -130,7 +132,7 @@ export function NavBar({ onOpenCommand }: { onOpenCommand: () => void }) {
                 </button>
               </GlassSurface>
             ) : (
-              <GlassButton aria-label="Suchen" onClick={onOpenCommand}>
+              <GlassButton aria-label="Suchen" onClick={onOpenCommand} className="ios-navbar__search">
                 <Search className="!size-[21px]" strokeWidth={2} />
               </GlassButton>
             )}
@@ -145,4 +147,17 @@ export function NavBar({ onOpenCommand }: { onOpenCommand: () => void }) {
 export function LargeTitle({ pathname }: { pathname: string }) {
   if (!hasLargeTitle(pathname)) return null;
   return <h1 className="ios-large-title mb-3 md:hidden">{mobileTitle(pathname)}</h1>;
+}
+
+/**
+ * Lets a screen put its own glass buttons into the trailing side of the phone nav bar (e.g. ✓ of the trade form
+ * sheet, "Bearbeiten" + "…" on the trade detail). Renders nothing on tablet/desktop (the nav bar is hidden there).
+ */
+export function NavBarActions({ children }: { children: React.ReactNode }) {
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the slot lives in the app shell, outside this tree
+    setSlot(document.getElementById("ios-navbar-trailing"));
+  }, []);
+  return slot ? createPortal(children, slot) : null;
 }

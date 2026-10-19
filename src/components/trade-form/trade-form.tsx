@@ -1,16 +1,19 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowDownRight, ArrowUpRight, Info, Zap } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Check, Info, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useId, useRef, useState, useTransition } from "react";
 import { Controller, useForm, useWatch, type FieldPath } from "react-hook-form";
 import { toast } from "sonner";
 
 import { ChipMultiSelect } from "@/components/chip-multi-select";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { FormField } from "@/components/form-field";
+import { SegmentedControl } from "@/components/ios/controls";
 import { notifySaved } from "@/components/ios/feedback";
+import { GlassButton } from "@/components/ios/glass";
+import { NavBarActions, setSheetCloseHandler } from "@/components/ios/nav-bar";
 import { MarkdownEditor } from "@/components/markdown-editor";
 import { PnlValue } from "@/components/pnl-value";
 import { RatingInput } from "@/components/rating-input";
@@ -103,11 +106,23 @@ function ModeToggle({
   quickDisabled: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1.5 max-md:w-full">
+      {/* Wrapper: the control's own display rule must not override md:hidden. */}
+      <div className="md:hidden">
+        <SegmentedControl
+          label="Erfassungsmodus"
+          value={value}
+          options={[
+            { value: "quick", label: "Schnell" },
+            { value: "detailed", label: "Detailliert" },
+          ].filter((o) => !(o.value === "quick" && quickDisabled))}
+          onChange={(m) => onChange(m as "quick" | "detailed")}
+        />
+      </div>
       <div
         role="radiogroup"
         aria-label="Erfassungsmodus"
-        className="inline-flex rounded-control border border-border bg-surface p-1"
+        className="inline-flex rounded-control border border-border bg-surface p-1 max-md:hidden"
       >
         {(["quick", "detailed"] as const).map((m) => (
           <button
@@ -168,6 +183,7 @@ export function TradeForm({
   const [discardOpen, setDiscardOpen] = useState(false);
   const [shotsChanged, setShotsChanged] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const formId = useId();
 
   const form = useForm<TradeFormValues>({
     resolver: zodResolver(tradeFormSchema),
@@ -377,6 +393,12 @@ export function TradeForm({
     else router.push(cancelHref);
   }, [dirty, router, cancelHref]);
 
+  // The ✕ of the phone sheet header asks before discarding changes, like "Abbrechen".
+  useEffect(() => {
+    setSheetCloseHandler(requestCancel);
+    return () => setSheetCloseHandler(null);
+  }, [requestCancel]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
@@ -525,6 +547,7 @@ export function TradeForm({
   return (
     <form
       ref={formRef}
+      id={formId}
       onSubmit={onSubmit}
       noValidate
       className="mx-auto flex w-full max-w-3xl flex-col gap-3 md:gap-4"
@@ -866,11 +889,15 @@ export function TradeForm({
         </>
       )}
 
-      {/* Spacer so the fixed mobile action bar never covers content */}
-      <div aria-hidden="true" className="h-16 md:hidden" />
+      {/* Phones: ✕ / ✓ live in the sheet header (nav bar) instead of this bar. */}
+      <NavBarActions>
+        <GlassButton type="submit" form={formId} variant="prominent" aria-label="Speichern" disabled={pending}>
+          {pending ? <Spinner className="size-[22px]" /> : <Check className="!size-[22px]" strokeWidth={2.6} />}
+        </GlassButton>
+      </NavBarActions>
       <div
         data-snapshot-skip
-        className="fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-30 border-t border-border bg-bg/85 px-4 py-3 backdrop-blur-[20px] md:sticky md:bottom-0 md:-mx-8 md:mt-2 md:px-8"
+        className="z-30 border-t border-border bg-bg/85 px-4 py-3 backdrop-blur-[20px] max-md:hidden md:sticky md:bottom-0 md:-mx-8 md:mt-2 md:px-8"
       >
         <div className="mx-auto flex max-w-3xl items-center justify-end gap-2">
           <p className="hidden min-w-0 flex-1 truncate text-small text-muted-foreground sm:block" aria-live="polite">

@@ -1311,3 +1311,180 @@ li + li > .ios-swipe .ios-row__body {
   border-radius: 14px;
   background: color-mix(in srgb, var(--bg) 92%, transparent);
 }
+
+/* ---------- Segmented control and rolling digits (sections 7.1, 7.3) ---------- */
+.ios-segmented {
+  position: relative;
+  display: flex;
+  height: 36px;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--ios-fill, var(--surface-2));
+}
+.ios-segmented__thumb {
+  position: absolute;
+  inset-block: 2px;
+  left: 2px;
+  border-radius: 999px; /* concentric with the track */
+  --glass-tint: color-mix(in srgb, var(--ios-cell, var(--surface)) 88%, transparent);
+  transition: transform 380ms var(--ease-spring);
+}
+.ios-segmented__item {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+}
+.ios-segmented__item--active {
+  font-weight: 600;
+}
+.ios-roll {
+  display: inline-flex;
+}
+.ios-roll__visual {
+  display: inline-flex;
+  font-variant-numeric: tabular-nums;
+}
+.ios-roll__digit {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  height: 1.2em;
+  line-height: 1.2em;
+}
+.ios-roll__column {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ios-roll__column > span {
+  height: 1.2em;
+  line-height: 1.2em;
+  text-align: center;
+}
+.ios-roll__column--animated {
+  transition: transform 520ms var(--ease-spring);
+}
+.ios-roll__char {
+  display: inline-block;
+  height: 1.2em;
+  line-height: 1.2em;
+}
+.ios-hero-glow {
+  position: absolute;
+  inset: -40px -20px auto;
+  height: 320px;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.5;
+  filter: blur(40px);
+}
+/* A screen with its own nav bar actions drops the default search circle (at most 5 glass layers). */
+#ios-navbar-trailing:not(:empty) ~ .ios-navbar__search {
+  display: none;
+}
+@media (max-width: 767px) {
+  /* Detail info grids read like inset-grouped rows: label left, value right, hairline separators. */
+  .ios-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .ios-info > div {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 44px;
+    padding: 10px 0;
+    box-shadow: inset 0 -0.5px 0 var(--ios-separator);
+  }
+  .ios-info > div:last-child {
+    box-shadow: none;
+  }
+  .ios-info dt {
+    font-size: var(--ios-body);
+    color: var(--text);
+  }
+  .ios-info dd {
+    font-size: var(--ios-body);
+    font-weight: 400;
+    color: var(--ios-label-2);
+    text-align: right;
+  }
+}
+@media (max-width: 767px) {
+  /* iOS switch: 51 × 31, systemGreen when on, 27 px white thumb that stretches while pressed. */
+  [data-slot="switch"][data-size="default"] {
+    width: 51px;
+    height: 31px;
+    padding: 2px;
+    border: none;
+    box-shadow: none;
+    background: var(--ios-fill-2, var(--surface-3));
+    transition: background-color 250ms var(--ease-ios);
+  }
+  [data-slot="switch"][data-state="checked"] {
+    background: var(--profit);
+  }
+  [data-slot="switch"][data-size="default"] [data-slot="switch-thumb"] {
+    width: 27px;
+    height: 27px;
+    box-shadow:
+      0 3px 8px rgba(0, 0, 0, 0.15),
+      0 3px 1px rgba(0, 0, 0, 0.06);
+    transition:
+      transform 300ms var(--ease-spring),
+      width 200ms var(--ease-ios);
+  }
+  [data-slot="switch"][data-size="default"] [data-slot="switch-thumb"][data-state="checked"] {
+    transform: translateX(20px);
+  }
+  [data-slot="switch"][data-size="default"]:active [data-slot="switch-thumb"] {
+    width: 33px;
+  }
+  [data-slot="switch"][data-size="default"]:active [data-slot="switch-thumb"][data-state="checked"] {
+    transform: translateX(14px);
+  }
+
+  /* Statistik tabs: horizontally scrollable capsule chips pinned under the nav bar. */
+  .ios-chip-tabs {
+    position: sticky;
+    z-index: 6;
+    top: calc(var(--sat) + 52px);
+    gap: 8px;
+    height: auto;
+    margin-inline: calc(-1 * var(--ios-margin));
+    padding: 6px var(--ios-margin);
+    overflow-x: auto;
+    border: none;
+    border-radius: 0;
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    scrollbar-width: none;
+  }
+  .ios-chip-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .ios-chip-tabs [data-slot="tabs-trigger"] {
+    flex: none;
+    height: 34px;
+    padding: 0 16px;
+    border-radius: 999px;
+    background: var(--ios-fill);
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 500;
+    box-shadow: none;
+  }
+  .ios-chip-tabs [data-slot="tabs-trigger"][data-state="active"] {
+    background: var(--accent);
+    color: #fff;
+  }
+}

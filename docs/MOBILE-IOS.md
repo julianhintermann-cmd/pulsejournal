@@ -137,6 +137,28 @@ Notes for the iOS 26 style mobile layer (viewports below 768 px). The audit and 
 - Every web spinner (`Loader2`) is a `Spinner`: the iOS activity indicator on phones, unchanged elsewhere. Skeletons
   become redacted placeholders (flat fill, 1.5 s opacity pulse) on phones.
 
+### M7 – Screens
+
+- Übersicht: greeting line under the large title, `PhoneHero` (net P&L as rolling digits `NumberRoll`, change in
+  % as a tinted capsule, full-bleed `ScrubChart` with Stocks-style scrubbing that shows date and value of the point
+  under the finger, presets 1W · 1M · 3M · YTD · 1J · Alles as a segmented control mapped onto the global filter).
+  KPI cards stay below as glass-free grouped tiles; Letzte Trades (5 + "Alle anzeigen"), Top Setups and Top-Fehler
+  are inset-grouped lists.
+- Trade erfassen/bearbeiten: presented sheet with ✕ (dirty check → "Änderungen verwerfen?") and a prominent ✓ glass
+  button in the nav bar that submits the form; Schnell/Detailliert as an iOS segmented control; the sticky web
+  bottom bar is gone on phones. Saving shows the checkmark HUD. Decimal inputs get `enterKeyHint="next"`.
+- Trade-Detail: nav bar capsule with ▲/▼ (previous/next trade), Bearbeiten and a "…" menu (Duplizieren, Teilen,
+  Löschen); details as iOS info rows (label left, value right, hairline separators); screenshots as a scroll-snap
+  carousel with page dots. The lightbox closes with a vertical swipe (overlay fades, image scales) and allows
+  pinch zoom (`data-allow-zoom`).
+- Journal: "Heute" capsule in the nav bar, days as list rows (mood emoji as icon, `EEE, d. MMM`, note preview,
+  day P&L and trade count). The day editor moves the autosave status into the nav bar.
+- Statistiken: the tab list becomes horizontally scrolling chips.
+- Einstellungen: iOS switches (51 × 31, green), "Transparenz reduzieren" switch.
+- Login/Setup: 72 px app icon, centred 34 pt title, `enterKeyHint` next/go so the keyboard walks through the form.
+- Tablet and desktop: every phone variant is `md:hidden`, every web variant `max-md:hidden`; the desktop screenshot
+  diff shows only dynamic content (time of day, build date, session count).
+
 ## Deviations from the brief
 
 - Playwright WebKit could not be downloaded in the build sandbox (`cdn.playwright.dev` is blocked there). Local
@@ -150,3 +172,9 @@ Notes for the iOS 26 style mobile layer (viewports below 768 px). The audit and 
   detail screen.
 - Hover: Tailwind 4 already wraps every `hover:` utility in `@media (hover: hover)`, so no extra gating of existing
   components was needed.
+- Kalender: the month pager keeps the existing horizontal swipe instead of a vertically scrolling year of months
+  (the calendar data is loaded per month; a continuous scroll would need new queries).
+- CSV import stays an inline step wizard on the Import/Export screen instead of a sheet; the wizard has four steps
+  with previews that need the full screen height.
+- Theme choice in Einstellungen stays a segmented control in the row instead of a pushed selection list.
+- The lightbox fades and scales on dismiss instead of flying back into the exact thumbnail frame.

@@ -6,6 +6,8 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
     <input
       type={type}
+      // Number fields show "next" on the phone keyboard so forms can be filled field by field.
+      enterKeyHint={props.enterKeyHint ?? (props.inputMode === "decimal" ? "next" : undefined)}
       data-slot="input"
       className={cn(
         "h-11 w-full min-w-0 rounded-control border border-border bg-surface-2 px-3 text-base text-foreground transition-[border-color,box-shadow] outline-none placeholder:text-faint md:h-10 md:text-[14px]",

@@ -8,9 +8,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         className="pointer-events-none absolute -top-48 left-1/2 h-[480px] w-[720px] -translate-x-1/2 rounded-full bg-accent/10 blur-3xl"
       />
       <div className="relative w-full max-w-[440px]">
-        <div className="mb-8 flex items-center justify-center gap-3">
-          <Logo className="size-10" />
-          <span className="text-h2">Pulse Journal</span>
+        <div className="mb-8 flex items-center justify-center gap-3 max-md:flex-col max-md:gap-4">
+          <Logo className="size-10 max-md:size-[72px] max-md:rounded-[16px] max-md:shadow-overlay" />
+          <span className="text-h2 max-md:text-[17px] max-md:font-semibold max-md:text-muted-foreground">
+            Pulse Journal
+          </span>
         </div>
         {children}
       </div>

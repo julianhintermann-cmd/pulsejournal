@@ -27,6 +27,9 @@ export function Lightbox({
 }) {
   const [transform, setTransform] = useState<Transform>(IDENTITY);
   const [swipeX, setSwipeX] = useState(0);
+  // Vertical drag on an unzoomed image dismisses the viewer (iOS Photos).
+  const [swipeY, setSwipeY] = useState(0);
+  const axis = useRef<"x" | "y" | null>(null);
   const [gesturing, setGesturing] = useState(false);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const gesture = useRef<{
@@ -73,6 +76,7 @@ export function Lightbox({
     } else if (pts.length === 1) {
       g.startX = e.clientX;
       g.startY = e.clientY;
+      axis.current = null;
       const now = Date.now();
       if (now - g.lastTap < 280) {
         setTransform(transform.scale > 1 ? IDENTITY : { scale: 2.5, x: 0, y: 0 });
@@ -94,7 +98,11 @@ export function Lightbox({
       const dx = e.clientX - g.startX;
       const dy = e.clientY - g.startY;
       if (g.origin.scale > 1) setTransform({ scale: g.origin.scale, x: g.origin.x + dx, y: g.origin.y + dy });
-      else setSwipeX(dx);
+      else {
+        if (!axis.current && Math.hypot(dx, dy) > 8) axis.current = Math.abs(dy) > Math.abs(dx) ? "y" : "x";
+        if (axis.current === "y") setSwipeY(dy);
+        else if (axis.current === "x") setSwipeX(dx);
+      }
     }
   };
 
@@ -103,11 +111,19 @@ export function Lightbox({
     if (pointers.current.size === 0) {
       setGesturing(false);
       if (transform.scale <= 1.02) {
+        if (Math.abs(swipeY) > 120) {
+          setSwipeY(0);
+          setSwipeX(0);
+          setTransform(IDENTITY);
+          onOpenChange(false);
+          return;
+        }
         if (swipeX > 60) go(-1);
         else if (swipeX < -60) go(1);
         setTransform(IDENTITY);
       }
       setSwipeX(0);
+      setSwipeY(0);
     } else {
       const [rest] = [...pointers.current.values()];
       gesture.current.startX = rest.x;
@@ -125,8 +141,12 @@ export function Lightbox({
       }}
     >
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-[60] bg-black/95 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+        <DialogPrimitive.Overlay
+          className="fixed inset-0 z-[60] bg-black/95 data-[state=open]:animate-in data-[state=open]:fade-in-0"
+          style={{ opacity: 1 - Math.min(0.7, Math.abs(swipeY) / 400) }}
+        />
         <DialogPrimitive.Content
+          data-allow-zoom
           className="fixed inset-0 z-[60] flex flex-col outline-none"
           aria-describedby={undefined}
         >
@@ -163,7 +183,9 @@ export function Lightbox({
                   !gesturing && "transition-transform duration-200 ease-pulse",
                 )}
                 style={{
-                  transform: `translate3d(${transform.x + swipeX}px, ${transform.y}px, 0) scale(${transform.scale})`,
+                  transform: `translate3d(${transform.x + swipeX}px, ${transform.y + swipeY}px, 0) scale(${
+                    transform.scale * (1 - Math.min(0.25, Math.abs(swipeY) / 1200))
+                  })`,
                 }}
               />
             ) : null}

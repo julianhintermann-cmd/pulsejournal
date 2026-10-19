@@ -71,7 +71,7 @@ export function SetupForm({ timeZones }: { timeZones: string[] }) {
   return (
     <form onSubmit={onSubmit} className="card flex flex-col gap-6 p-6 sm:p-8" noValidate>
       <div className="flex flex-col gap-1">
-        <h1 className="text-h1">Willkommen bei Pulse</h1>
+        <h1 className="text-h1 max-md:text-center max-md:text-[34px] max-md:leading-tight">Willkommen bei Pulse</h1>
         <p className="text-body text-muted-foreground">
           Lege dein Konto an. Pulse Journal ist für genau eine Person gedacht – dich.
         </p>
@@ -83,6 +83,7 @@ export function SetupForm({ timeZones }: { timeZones: string[] }) {
           <Input
             id="username"
             autoComplete="username"
+            enterKeyHint="next"
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}

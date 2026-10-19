@@ -46,9 +46,9 @@ test("setup, account, quick trade, dashboard, list, logout and login", async ({ 
 
   // It shows up on the dashboard …
   await page.goto("/?range=all");
-  await expect(page.getByText("Letzte Trades")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Letzte Trades" })).toBeVisible();
   await expect(page.getByRole("link", { name: /NAS100/ }).first()).toBeVisible();
-  await expect(page.getByText("+CHF 200.00").first()).toBeVisible();
+  await expect(page.getByText("+CHF 200.00").filter({ visible: true }).first()).toBeVisible();
 
   // … and in the trade list.
   await page.goto("/trades?range=all");
@@ -65,5 +65,6 @@ test("setup, account, quick trade, dashboard, list, logout and login", async ({ 
   await page.fill("#password", PASSWORD);
   await page.getByRole("button", { name: "Anmelden" }).click();
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByRole("heading", { name: new RegExp(`, ${USER}$`) })).toBeVisible();
+  // Desktop greets with a heading, phones with a line under the large title.
+  await expect(page.getByText(new RegExp(`, ${USER}`)).filter({ visible: true }).first()).toBeVisible();
 });

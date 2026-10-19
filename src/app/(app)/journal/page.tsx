@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { EmptyState } from "@/components/empty-state";
+import { GlassButton } from "@/components/ios/glass";
+import { ListRow, ListSection } from "@/components/ios/list";
+import { NavBarActions } from "@/components/ios/nav-bar";
 import { PnlValue } from "@/components/pnl-value";
 import { Button } from "@/components/ui/button";
 import { formatDayKey, plural } from "@/lib/format";
@@ -18,7 +21,15 @@ export default function JournalPage() {
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-3 md:gap-4">
-      <div className="flex items-center justify-between gap-3">
+      {/* Phones: "Heute" is a prominent glass capsule in the nav bar. */}
+      <NavBarActions>
+        <GlassButton asChild variant="prominent" shape="capsule" className="font-semibold">
+          <Link href="/journal/today">
+            <NotebookPen /> Heute
+          </Link>
+        </GlassButton>
+      </NavBarActions>
+      <div className="flex items-center justify-between gap-3 max-md:hidden">
         <p className="text-body text-muted-foreground">{plural(days.length, "Tag", "Tage")}</p>
         <Button asChild>
           <Link href="/journal/today">
@@ -40,43 +51,74 @@ export default function JournalPage() {
           />
         </div>
       ) : (
-        <ul className="card divide-y divide-border overflow-hidden">
-          {days.map((d) => (
-            <li key={d.date}>
-              <Link
+        <>
+          <ListSection className="md:hidden" footer={plural(days.length, "Tag", "Tage")}>
+            {days.map((d) => (
+              <ListRow
+                key={d.date}
                 href={`/journal/${d.date}`}
-                className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2 md:px-5"
-              >
-                <span
-                  className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-2 text-[20px]"
-                  aria-hidden="true"
+                prefetch={false}
+                icon={
+                  <span
+                    className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-[var(--ios-fill)] text-[18px]"
+                    aria-hidden="true"
+                  >
+                    {d.mood ? MOOD_EMOJI[d.mood - 1] : "·"}
+                  </span>
+                }
+                title={formatDayKey(d.date, "EEE, d. MMM")}
+                subtitle={d.firstLine || (d.hasEntry ? "Kein Review" : "Noch kein Eintrag")}
+                value={
+                  <span className="flex flex-col items-end">
+                    {d.pnl.map((p) => (
+                      <PnlValue key={p.currency} value={p.value} currency={p.currency} className="font-semibold" />
+                    ))}
+                    <span className="text-[13px]">
+                      {d.trades > 0 ? plural(d.trades, "Trade", "Trades") : "Keine Trades"}
+                    </span>
+                  </span>
+                }
+              />
+            ))}
+          </ListSection>
+          <ul className="card divide-y divide-border overflow-hidden max-md:hidden">
+            {days.map((d) => (
+              <li key={d.date}>
+                <Link
+                  href={`/journal/${d.date}`}
+                  className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2 md:px-5"
                 >
-                  {d.mood ? MOOD_EMOJI[d.mood - 1] : "·"}
-                </span>
-                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="text-[14px] font-semibold">{formatDayKey(d.date, "EEEE, d. MMMM yyyy")}</span>
-                  <span className="truncate text-small text-muted-foreground">
-                    {d.firstLine || (d.hasEntry ? "Kein Review" : "Noch kein Eintrag")}
+                  <span
+                    className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-2 text-[20px]"
+                    aria-hidden="true"
+                  >
+                    {d.mood ? MOOD_EMOJI[d.mood - 1] : "·"}
                   </span>
-                </span>
-                <span className="flex shrink-0 flex-col items-end gap-0.5">
-                  {d.pnl.map((p) => (
-                    <PnlValue
-                      key={p.currency}
-                      value={p.value}
-                      currency={p.currency}
-                      className="text-[14px] font-semibold"
-                    />
-                  ))}
-                  <span className="text-small text-muted-foreground">
-                    {d.trades > 0 ? plural(d.trades, "Trade", "Trades") : "Keine Trades"}
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="text-[14px] font-semibold">{formatDayKey(d.date, "EEEE, d. MMMM yyyy")}</span>
+                    <span className="truncate text-small text-muted-foreground">
+                      {d.firstLine || (d.hasEntry ? "Kein Review" : "Noch kein Eintrag")}
+                    </span>
                   </span>
-                </span>
-                <ChevronRight className="size-4 shrink-0 text-faint" />
-              </Link>
-            </li>
-          ))}
-        </ul>
+                  <span className="flex shrink-0 flex-col items-end gap-0.5">
+                    {d.pnl.map((p) => (
+                      <PnlValue
+                        key={p.currency}
+                        value={p.value}
+                        currency={p.currency}
+                        className="text-[14px] font-semibold"
+                      />
+                    ))}
+                    <span className="text-small text-muted-foreground">
+                      {d.trades > 0 ? plural(d.trades, "Trade", "Trades") : "Keine Trades"}
+                    </span>
+                  </span>
+                  <ChevronRight className="size-4 shrink-0 text-faint" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </div>
   );
