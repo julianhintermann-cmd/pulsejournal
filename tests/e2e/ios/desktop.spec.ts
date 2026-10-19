@@ -30,9 +30,16 @@ for (const width of [1440, 1024, 768]) {
           presented: document.documentElement.hasAttribute("data-presented"),
           stackLayers: shown(".ios-stack-under[data-active], .ios-stack-over[data-active]"),
           fontSize: getComputedStyle(document.documentElement).fontSize,
+          scrollRestoration: history.scrollRestoration,
         };
       });
-      expect(state, `${path} at ${width}`).toEqual({ chrome: 0, presented: false, stackLayers: 0, fontSize: "16px" });
+      expect(state, `${path} at ${width}`).toEqual({
+        chrome: 0,
+        presented: false,
+        stackLayers: 0,
+        fontSize: "16px",
+        scrollRestoration: "auto",
+      });
     }
   });
 }

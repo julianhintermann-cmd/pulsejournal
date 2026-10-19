@@ -37,8 +37,10 @@ export const test = base.extend<Fixtures>({
       const errors: string[] = [];
       page.on("pageerror", (error) => {
         const text = String(error);
-        // WebKit reports Next.js prefetches/RSC requests aborted by a navigation as page errors.
-        if (/Fetch API cannot load .*_rsc=.* due to access control checks/.test(text)) return;
+        // WebKit reports Next.js RSC fetches aborted by a navigation, and the service worker registration it refuses
+        // in automation (the app catches that rejection), as page errors.
+        if (/(Fetch API cannot load .*_rsc=\S* |Cannot load .*\/sw\.js )due to access control checks/.test(text))
+          return;
         errors.push(text);
       });
       await provide(errors);

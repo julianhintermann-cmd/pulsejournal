@@ -43,6 +43,16 @@ export function IosRuntime() {
     applyReducedTransparency();
     const html = document.documentElement;
 
+    // Phones restore scroll positions themselves (stack pops, tab switches). The browser's own restore runs at an
+    // engine-specific moment after a back navigation (in Safari after ours, with the position from before the push
+    // reset it) and would win, so it is off below 768 px. Tablets and desktop keep the browser default.
+    const phoneQuery = window.matchMedia("(max-width: 767px)");
+    const syncScrollRestoration = () => {
+      history.scrollRestoration = phoneQuery.matches ? "manual" : "auto";
+    };
+    syncScrollRestoration();
+    phoneQuery.addEventListener("change", syncScrollRestoration);
+
     const standaloneQuery = window.matchMedia("(display-mode: standalone)");
     const syncStandalone = () => html.toggleAttribute("data-standalone", isStandalone());
     syncStandalone();
@@ -81,6 +91,7 @@ export function IosRuntime() {
     document.addEventListener("focusin", keepVisible);
 
     return () => {
+      phoneQuery.removeEventListener("change", syncScrollRestoration);
       standaloneQuery.removeEventListener("change", syncStandalone);
       document.removeEventListener("gesturestart", preventZoom);
       document.removeEventListener("gesturechange", preventZoom);

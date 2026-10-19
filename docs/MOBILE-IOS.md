@@ -189,7 +189,12 @@ Notes for the iOS 26 style mobile layer (viewports below 768 px). The audit and 
   Chromium with `SYNTHETIC_TOUCH=1`.
 - Findings fixed by the suite: the dashboard hero glow widened the page by 20 px (the fixed nav bar grew with it and
   cut off its trailing button); form sheets (Konto, Buchung, Playbook, Instrument) now ask "Änderungen verwerfen?"
-  before a swipe or ✕ discards input; light mode text colours raised to WCAG AA (see deviations).
+  before a swipe or ✕ discards input; light mode text colours raised to WCAG AA (see deviations). In WebKit the list
+  came back at the top after a pop: the browser's own scroll restoration (`history.scrollRestoration = "auto"`, with
+  the position stored after the push had reset it) ran after the app's restore. Phones now use `"manual"` and the
+  app restores on every history jump (also Safari's back button to another tab), keeps retrying while the screen is
+  still shorter than the saved position, and never stores a position under the URL of the screen being left.
+  Tablet and desktop keep `"auto"`.
 - Desktop/tablet: `python3 tests/visual/compare.py BEFORE AFTER` on two `capture.mjs --set desktop` runs. Only the
   known dynamic regions differ (time-of-day greeting, current time in the trade form, build date and session count
   in Einstellungen, the stats charts that render a frame differently between runs).
@@ -272,5 +277,5 @@ home-screen app need a device. Before a release, on an iPhone with iOS 26 (Safar
   own prominent buttons on systemBlue. Kept for the brand; held to 3:1 in the contrast test.
 - Playwright WebKit gestures are synthetic events (no touch-move API in WebKit); the real-touch path runs in Chromium.
 - WebKit test quirks: no `mouse.wheel` in mobile WebKit (scrolling via `scrollTo`), taps go through `locator.tap()`
-  (the visual viewport shifts while a field is focused), and aborted Next.js RSC prefetches ("Fetch API cannot load …
-  access control checks") are not counted as page errors.
+  (the visual viewport shifts while a field is focused), and aborted Next.js RSC fetches and the refused service
+  worker registration ("… due to access control checks") are not counted as page errors.

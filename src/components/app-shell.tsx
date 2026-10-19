@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { PullToRefresh } from "@/components/ios/feedback";
 import { LargeTitle, NavBar } from "@/components/ios/nav-bar";
-import { StackProbe, useStackNavigation } from "@/components/ios/stack";
+import { scrollToWhenReady, StackProbe, useStackNavigation } from "@/components/ios/stack";
 import { GlassTabBar } from "@/components/ios/tab-bar";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { SidebarNav } from "@/components/sidebar-nav";
@@ -80,12 +80,15 @@ export function AppShell({ initialCollapsed, children }: { initialCollapsed: boo
     // Sheets (Neuer Trade, bearbeiten) are presented over a tab, they are not a tab's screen.
     if (!isSheetRoute(pathname)) rememberScreen(tabFor(pathname), url());
     const restore = takeScrollRestore(url());
-    if (restore != null) requestAnimationFrame(() => window.scrollTo(0, restore));
+    if (restore != null) requestAnimationFrame(() => scrollToWhenReady(restore));
     let frame = 0;
     const onScroll = () => {
       if (frame) return;
       frame = requestAnimationFrame(() => {
         frame = 0;
+        // During a history jump the URL already names the next screen while this one is still shown (Safari
+        // scrolls then): never store this screen's position under the other URL.
+        if (window.location.pathname !== pathname) return;
         rememberScroll(url(), window.scrollY);
         if (!isSheetRoute(window.location.pathname)) rememberScreen(tabFor(window.location.pathname), url());
       });

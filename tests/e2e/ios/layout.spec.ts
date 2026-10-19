@@ -146,35 +146,34 @@ test("the keyboard inset is tracked and the tab bar gets out of the way", async 
   await page.goto("/journal/today", { waitUntil: "networkidle" });
   await expect(page.locator(".ios-tabbar")).toBeVisible();
   // Emulators have no software keyboard: drive the tracker the way iOS does, through the visual viewport.
-  const lifted = await page.evaluate(async () => {
-    const vv = window.visualViewport!;
-    const height = vv.height;
-    Object.defineProperty(vv, "height", { configurable: true, get: () => height - 336 });
-    vv.dispatchEvent(new Event("resize"));
-    await new Promise((r) => setTimeout(r, 700));
-    const root = getComputedStyle(document.documentElement);
-    const tabbar = document.querySelector(".ios-tabbar")!;
-    const result = {
-      kb: parseFloat(root.getPropertyValue("--kb")) || 0,
-      flag: document.documentElement.hasAttribute("data-keyboard"),
-      tabbarHidden:
-        getComputedStyle(tabbar).visibility === "hidden" ||
-        getComputedStyle(tabbar).display === "none" ||
-        Number(getComputedStyle(tabbar).opacity) === 0 ||
-        tabbar.getBoundingClientRect().top >= window.innerHeight,
-    };
-    Object.defineProperty(vv, "height", { configurable: true, get: () => height });
-    vv.dispatchEvent(new Event("resize"));
-    await new Promise((r) => setTimeout(r, 200));
-    return {
-      ...result,
-      after: parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--kb")) || 0,
-    };
-  });
-  expect(lifted.kb).toBeGreaterThan(300);
-  expect(lifted.flag).toBe(true);
-  expect(lifted.tabbarHidden).toBe(true);
-  expect(lifted.after).toBe(0);
+  const setKeyboard = (height: number) =>
+    page.evaluate((kb) => {
+      const vv = window.visualViewport!;
+      const w = window as Window & { __vvHeight?: number };
+      w.__vvHeight ??= vv.height;
+      const full = w.__vvHeight;
+      Object.defineProperty(vv, "height", { configurable: true, get: () => full - kb });
+      vv.dispatchEvent(new Event("resize"));
+    }, height);
+  const state = () =>
+    page.evaluate(() => {
+      const tabbar = document.querySelector(".ios-tabbar")!;
+      const style = getComputedStyle(tabbar);
+      return {
+        kb: parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--kb")) || 0,
+        flag: document.documentElement.hasAttribute("data-keyboard"),
+        tabbarHidden:
+          style.visibility === "hidden" ||
+          style.display === "none" ||
+          Number(style.opacity) < 0.05 ||
+          tabbar.getBoundingClientRect().top >= window.innerHeight,
+      };
+    });
+
+  await setKeyboard(336);
+  await expect.poll(state).toEqual({ kb: 336, flag: true, tabbarHidden: true });
+  await setKeyboard(0);
+  await expect.poll(state).toEqual({ kb: 0, flag: false, tabbarHidden: false });
 });
 
 test("text meets WCAG AA contrast", async ({ page }) => {

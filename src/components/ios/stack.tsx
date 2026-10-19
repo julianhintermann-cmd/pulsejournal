@@ -174,7 +174,30 @@ function crossfade(main: HTMLElement) {
 
 function restoreScroll() {
   const y = savedScroll(window.location.pathname + window.location.search);
-  if (y != null) window.scrollTo(0, y);
+  if (y != null) scrollToWhenReady(y);
+}
+
+/**
+ * Scrolls to `y`; while the screen is still shorter than that (loading state, images), keeps restoring as it grows,
+ * for up to 2 s or until the user touches or scrolls.
+ */
+export function scrollToWhenReady(y: number) {
+  window.scrollTo(0, y);
+  if (Math.abs(window.scrollY - y) < 2 || typeof ResizeObserver === "undefined") return;
+  const observer = new ResizeObserver(() => {
+    window.scrollTo(0, y);
+    if (Math.abs(window.scrollY - y) < 2) stop();
+  });
+  const timer = window.setTimeout(() => stop(), 2000);
+  function stop() {
+    observer.disconnect();
+    window.clearTimeout(timer);
+    window.removeEventListener("touchstart", stop);
+    window.removeEventListener("wheel", stop);
+  }
+  observer.observe(document.body);
+  window.addEventListener("touchstart", stop, { passive: true });
+  window.addEventListener("wheel", stop, { passive: true });
 }
 
 function classify(from: string, to: string): Kind {
@@ -191,8 +214,15 @@ function classify(from: string, to: string): Kind {
   return "replace";
 }
 
+// Back/forward through the history (Safari's buttons and edge swipe included): the screen gets its remembered scroll
+// position back, whatever kind of transition it is (the browser's own restore is off on phones, see IosRuntime).
+let traversal = false;
+if (typeof window !== "undefined") window.addEventListener("popstate", () => (traversal = true));
+
 /** Called after every route commit (layout effect, before paint) with the snapshot of the screen just left. */
 function onCommit(to: string, from: Snapshot | null) {
+  const fromHistory = traversal;
+  traversal = false;
   finishRunning();
   const main = getMain();
   if (!main || !isPhone()) return;
@@ -222,7 +252,7 @@ function onCommit(to: string, from: Snapshot | null) {
     const depth = depthOf(to);
     while (list.length && depthOf(list[list.length - 1].pathname) >= depth) list.pop();
   }
-  if (kind === "pop" || kind === "dismiss") restoreScroll();
+  if (kind === "pop" || kind === "dismiss" || fromHistory) restoreScroll();
 
   if (kind === "present") {
     presentingTab = tabFor(from.pathname);
