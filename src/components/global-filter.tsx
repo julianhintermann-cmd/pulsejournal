@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarRange, Check, ChevronDown, SlidersHorizontal, Wallet } from "lucide-react";
+import { CalendarRange, Check, ChevronDown, Wallet } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -242,13 +242,15 @@ export function GlobalFilterBar({ mode }: { mode: "full" | "account" }) {
   );
 }
 
-/** Mobile variant: icon button that opens a bottom sheet. */
+/** Phone variant: the current value ("Dieser Monat ▾") inside the nav bar capsule, opening a sheet. */
 export function GlobalFilterSheetButton({ mode }: { mode: "full" | "account" }) {
   const state = useFilterState();
   const apply = useApplyFilter();
+  const { accounts } = useApp();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<FilterState>(state);
-  const active = state.range !== "month" || state.accountId != null;
+  const account = accounts.find((a) => a.id === state.accountId);
+  const label = mode === "full" ? rangeLabel(state) : (account?.name ?? "Alle Konten");
 
   const onOpenChange = (next: boolean) => {
     if (next) setDraft({ ...state, to: state.to ?? todayKey() });
@@ -259,10 +261,18 @@ export function GlobalFilterSheetButton({ mode }: { mode: "full" | "account" }) 
 
   return (
     <>
-      <Button variant="ghost" size="icon" aria-label="Filter" className="relative" onClick={() => onOpenChange(true)}>
-        <SlidersHorizontal className="size-5" />
-        {active ? <span className="absolute top-2.5 right-2.5 size-2 rounded-full bg-accent" /> : null}
-      </Button>
+      <button
+        type="button"
+        aria-label={`Filter: ${label}${mode === "full" && account ? `, ${account.name}` : ""}`}
+        onClick={() => onOpenChange(true)}
+        className="flex h-11 max-w-[11.5rem] min-w-0 items-center gap-1.5 rounded-full pr-2.5 pl-4 text-[15px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      >
+        {mode === "full" && account ? (
+          <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: account.color }} />
+        ) : null}
+        <span className="truncate tabular-nums">{label}</span>
+        <ChevronDown className="size-4 shrink-0 opacity-60" strokeWidth={2.4} />
+      </button>
       <ResponsiveDialog
         open={open}
         onOpenChange={onOpenChange}

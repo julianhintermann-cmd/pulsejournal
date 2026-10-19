@@ -45,6 +45,29 @@ Notes for the iOS 26 style mobile layer (viewports below 768 px). The audit and 
   cell with a separator outline. `prefers-contrast: more` raises tint opacity and rim strength.
   `prefers-reduced-motion` disables the press scale.
 
+### M3 – Navigation chrome
+
+- `GlassTabBar` (`src/components/ios/tab-bar.tsx`): floating glass capsule (16/20 px inset, bottom
+  `max(safe-area − 8, 12)`, 62 px) with Übersicht / Trades / Journal / Mehr and a selection pill (concentric 27 px
+  radius) that slides with a spring and stretches like a droplet in the direction of travel. Dragging a finger
+  across the capsule scrubs between tabs (pill follows the finger, haptic per step, commit on release). Separate
+  prominent glass "+" circle for "Neuer Trade". Scrolling down > 40 px collapses the capsule into a circle with the
+  active icon (transform/opacity only); scrolling up or tapping the circle expands it. Hidden while the keyboard is
+  open (`[data-keyboard]`) and while a large sheet is presented (`[data-sheet-large]`).
+- Tab behaviour: each tab remembers its last screen and every screen its scroll position
+  (`src/lib/ios/nav-memory.ts`); switching tabs is instant (no slide) and restores the position; tapping the active
+  tab pops to its root, tapping it at the root scrolls to the top.
+- `NavBar` (`src/components/ios/nav-bar.tsx`): no solid bar. Glass back circle (pops when the previous screen is the
+  parent, otherwise opens the parent), inline title that fades in once the large title scrolled under the bar, one
+  glass capsule on the right with the global filter value ("Dieser Monat ▾") and search. Large titles
+  (`ios-large-title`, 34 pt) on tab roots and list screens grow slightly on rubber-band overscroll.
+- Scroll edge effect: a blurred, masked gradient behind status bar and nav bar fades in when content scrolls under
+  it; a subtle gradient sits behind the tab bar. At most 5 backdrop-filter layers are visible (edge, back, capsule,
+  tab bar, "+").
+- Main content scrolls on the document under the translucent bars; padding keeps it reachable.
+- Install hint: solid iOS card above the tab bar with the share glyph.
+- The old `bottom-tab-bar.tsx` was removed; the desktop/tablet `TopBar` is hidden below 768 px.
+
 ## Deviations from the brief
 
 - Playwright WebKit could not be downloaded in the build sandbox (`cdn.playwright.dev` is blocked there). Local

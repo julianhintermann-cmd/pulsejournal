@@ -65,21 +65,27 @@ export function InstallHint() {
 
   return (
     <>
-      <div className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+80px)] z-30 flex items-center gap-2 rounded-full border border-border bg-surface-2/95 py-1.5 pr-1.5 pl-2 shadow-overlay backdrop-blur md:hidden">
-        <Logo className="size-7" />
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="min-w-0 flex-1 truncate text-left text-[13px] font-medium"
-        >
-          Als App installieren
+      {/* iOS card above the floating tab bar (solid: glass is reserved for the bars themselves). */}
+      <div className="fixed inset-x-[var(--ios-margin)] bottom-[calc(max(var(--sab)-8px,12px)+74px)] z-30 flex items-center gap-2.5 rounded-[22px] bg-[var(--ios-cell)] py-2 pr-2 pl-2.5 shadow-overlay md:hidden">
+        <Logo className="size-9 rounded-[9px]" />
+        <button type="button" onClick={() => setOpen(true)} className="flex min-w-0 flex-1 flex-col text-left">
+          <span className="truncate text-[15px] font-semibold">Als App installieren</span>
+          <span className="flex items-center gap-1 truncate text-[13px] text-muted-foreground">
+            {platform === "ios" ? (
+              <>
+                Über <Share className="size-3.5 shrink-0" aria-label="Teilen" /> zum Home-Bildschirm
+              </>
+            ) : (
+              "Direkt vom Startbildschirm öffnen"
+            )}
+          </span>
         </button>
         {platform === "android" && prompt ? (
-          <Button size="xs" className="rounded-full" onClick={install}>
+          <Button size="sm" className="rounded-full" onClick={install}>
             Installieren
           </Button>
         ) : (
-          <Button size="xs" variant="secondary" className="rounded-full" onClick={() => setOpen(true)}>
+          <Button size="sm" variant="secondary" className="rounded-full" onClick={() => setOpen(true)}>
             Anleitung
           </Button>
         )}
@@ -87,7 +93,7 @@ export function InstallHint() {
           type="button"
           onClick={dismiss}
           aria-label="Hinweis schliessen"
-          className="inline-flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-surface-3"
+          className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-surface-3"
         >
           <X className="size-4" />
         </button>

@@ -5,31 +5,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 
-import { GlobalFilterBar, GlobalFilterSheetButton } from "@/components/global-filter";
+import { GlobalFilterBar } from "@/components/global-filter";
 import { filterMode, pageTitle } from "@/components/nav-items";
 import { Button } from "@/components/ui/button";
 
+/** Tablet and desktop top bar; phones use the iOS NavBar (src/components/ios/nav-bar.tsx). */
 export function TopBar({ onOpenCommand }: { onOpenCommand: () => void }) {
   const pathname = usePathname();
   const title = pageTitle(pathname);
   const mode = filterMode(pathname);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-bg/80 pt-[env(safe-area-inset-top)] backdrop-blur-[20px]">
+    <header className="sticky top-0 z-30 border-b border-border bg-bg/80 pt-[env(safe-area-inset-top)] backdrop-blur-[20px] max-md:hidden">
       <div className="flex h-14 items-center gap-2 px-4 md:h-16 md:gap-3 md:px-8">
         <h1 className="min-w-0 flex-1 truncate text-h2 md:text-h1">{title}</h1>
-
-        {/* Mobile actions */}
-        <div className="flex items-center md:hidden">
-          <Button variant="ghost" size="icon" aria-label="Suchen" onClick={onOpenCommand}>
-            <Search className="size-5" />
-          </Button>
-          {mode ? (
-            <Suspense>
-              <GlobalFilterSheetButton mode={mode} />
-            </Suspense>
-          ) : null}
-        </div>
 
         {/* Desktop / tablet actions */}
         <div className="hidden items-center gap-2 md:flex">

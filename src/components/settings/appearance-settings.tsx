@@ -29,29 +29,31 @@ export function AppearanceSettings({ theme, compactTables }: { theme: Theme; com
   };
 
   return (
-    <div className="flex flex-col divide-y divide-border">
-      <div className="flex flex-col gap-3 pb-5 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-[14px] font-medium">Theme</p>
-          <p className="text-small text-muted-foreground">Dunkel ist der Standard.</p>
+    <>
+      <div className="flex flex-col divide-y divide-border">
+        <div className="flex flex-col gap-3 pb-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[14px] font-medium">Theme</p>
+            <p className="text-small text-muted-foreground">Dunkel ist der Standard.</p>
+          </div>
+          <ThemeToggle value={theme} />
         </div>
-        <ThemeToggle value={theme} />
+        <label className="flex items-center justify-between gap-4 pt-5">
+          <div>
+            <p className="text-[14px] font-medium">Kompakte Tabellen</p>
+            <p className="text-small text-muted-foreground">Geringere Zeilenhöhe in der Trade-Tabelle.</p>
+          </div>
+          <Switch checked={compact} onCheckedChange={toggleCompact} />
+        </label>
       </div>
-      <label className="flex items-center justify-between gap-4 pt-5">
-        <div>
-          <p className="text-[14px] font-medium">Kompakte Tabellen</p>
-          <p className="text-small text-muted-foreground">Geringere Zeilenhöhe in der Trade-Tabelle.</p>
-        </div>
-        <Switch checked={compact} onCheckedChange={toggleCompact} />
-      </label>
       {/* Glass only exists in the phone layout, so the switch is only shown there (stored on this device). */}
-      <label className="flex items-center justify-between gap-4 pt-5 md:hidden">
+      <label className="mt-5 flex items-center justify-between gap-4 border-t border-border pt-5 md:hidden">
         <div>
           <p className="text-[14px] font-medium">Transparenz reduzieren</p>
           <p className="text-small text-muted-foreground">Leisten und Menüs ohne Glaseffekt, nur auf diesem Gerät.</p>
         </div>
         <Switch checked={reduceTransparency} onCheckedChange={setReducedTransparency} />
       </label>
-    </div>
+    </>
   );
 }

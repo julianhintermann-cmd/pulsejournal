@@ -17,6 +17,12 @@ export function useScrollDirection(threshold = 40) {
       const y = Math.max(0, window.scrollY);
       const max = document.documentElement.scrollHeight - window.innerHeight;
       let collapsed: boolean | null = null;
+      // Programmatic jumps (scroll restore after a tab switch) are not a gesture: keep the current state.
+      if (Math.abs(y - last) > 400) {
+        last = y;
+        anchor = y;
+        return;
+      }
       if (y < 8) collapsed = false;
       else if (y > last) {
         if (y - anchor > threshold && y < max - 4) collapsed = true;

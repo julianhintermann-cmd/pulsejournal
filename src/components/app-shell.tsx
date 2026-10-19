@@ -4,11 +4,14 @@ import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { BottomTabBar } from "@/components/bottom-tab-bar";
+import { LargeTitle, NavBar } from "@/components/ios/nav-bar";
+import { GlassTabBar } from "@/components/ios/tab-bar";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { RouteSkeleton } from "@/components/skeletons";
 import { TopBar } from "@/components/top-bar";
+import { tabFor } from "@/lib/ios/nav";
+import { rememberScreen, rememberScroll, takeScrollRestore, trackScreen } from "@/lib/ios/nav-memory";
 import { cn } from "@/lib/utils";
 
 // The command palette (cmdk) is only loaded once it is opened for the first time.
@@ -63,6 +66,29 @@ export function AppShell({ initialCollapsed, children }: { initialCollapsed: boo
     return () => document.removeEventListener("click", onClick);
   }, []);
 
+  // Phone navigation memory: last screen per tab, scroll position per screen, restore after a tab switch.
+  useEffect(() => {
+    trackScreen(pathname);
+    const url = () => window.location.pathname + window.location.search;
+    rememberScreen(tabFor(pathname), url());
+    const restore = takeScrollRestore(url());
+    if (restore != null) requestAnimationFrame(() => window.scrollTo(0, restore));
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        rememberScroll(url(), window.scrollY);
+        rememberScreen(tabFor(window.location.pathname), url());
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [pathname]);
+
   const toggle = () => {
     setCollapsed((prev) => {
       const next = !prev;
@@ -80,18 +106,23 @@ export function AppShell({ initialCollapsed, children }: { initialCollapsed: boo
       <SidebarNav collapsed={collapsed} onToggle={toggle} />
       <div className={cn("flex min-h-dvh flex-col md:pl-[72px]", !collapsed && "lg:pl-[248px]")}>
         <TopBar onOpenCommand={openCommand} />
+        <NavBar onOpenCommand={openCommand} />
         <main
           key={pathname}
           id="main"
           className={cn(
-            "flex-1 px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+96px)] md:px-8 md:pt-6 md:pb-10",
+            // Phones: content runs under the status bar and the floating bars (padding keeps it reachable).
+            "flex-1 pt-[calc(var(--sat)+52px)] pr-[calc(var(--ios-margin)+var(--sar))] pb-[calc(max(var(--sab)-8px,12px)+86px)] pl-[calc(var(--ios-margin)+var(--sal))]",
+            "md:px-8 md:pt-6 md:pb-10",
             navigated && "animate-page",
           )}
         >
+          <LargeTitle pathname={pathname} />
           {pendingPath ? <RouteSkeleton pathname={pendingPath} /> : children}
         </main>
       </div>
-      <BottomTabBar />
+      <div aria-hidden="true" className="ios-edge-bottom md:hidden" />
+      <GlassTabBar />
       {commandLoaded ? <CommandMenu open={commandOpen} onOpenChange={setCommandOpen} /> : null}
       <KeyboardShortcuts onOpenCommand={openCommand} />
     </div>
