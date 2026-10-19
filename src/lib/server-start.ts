@@ -1,3 +1,4 @@
+import { startBackupScheduler } from "@/lib/backup";
 import { runMigrations } from "@/lib/db/migrate";
 import { env } from "@/lib/env";
 import { log } from "@/lib/log";
@@ -25,4 +26,5 @@ export async function startServer() {
   }
   // Trades soft-deleted right before a restart are past their undo window now.
   await purgeDeletedTrades().catch((error) => log.error("Purging deleted trades failed", error));
+  startBackupScheduler();
 }
