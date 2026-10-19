@@ -95,7 +95,7 @@ export function MarkdownEditor({
         className,
       )}
     >
-      <div className="flex items-center gap-1 border-b border-border px-1.5 py-1">
+      <div className="flex items-center gap-1 border-b border-border px-1 py-1 sm:px-1.5">
         <div className="flex items-center gap-0.5" role="tablist">
           {(["write", "preview"] as const).map((t) => (
             <button
@@ -105,7 +105,7 @@ export function MarkdownEditor({
               aria-selected={tab === t}
               onClick={() => setTab(t)}
               className={cn(
-                "h-8 rounded-[7px] px-2.5 text-[13px] font-medium transition-colors",
+                "h-8 rounded-[7px] px-2 text-[13px] font-medium transition-colors sm:px-2.5",
                 tab === t ? "bg-surface-3 text-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -123,7 +123,7 @@ export function MarkdownEditor({
                 aria-label={a.label}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => run(a)}
-                className="inline-flex size-8 items-center justify-center rounded-[7px] text-muted-foreground transition-colors hover:bg-surface-3 hover:text-foreground"
+                className="inline-flex size-7 items-center justify-center rounded-[7px] text-muted-foreground transition-colors hover:bg-surface-3 hover:text-foreground sm:size-8"
               >
                 <a.icon className="size-4" />
               </button>
