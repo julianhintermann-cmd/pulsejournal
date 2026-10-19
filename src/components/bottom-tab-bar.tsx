@@ -21,7 +21,7 @@ function Tab({ href, label, icon: Icon, active }: (typeof TABS)[number] & { acti
       aria-current={active ? "page" : undefined}
       className={cn(
         "flex h-16 flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors",
-        active ? "text-foreground" : "text-faint",
+        active ? "text-foreground" : "text-muted-foreground",
       )}
     >
       <Icon className={cn("size-[22px]", active && "text-accent")} strokeWidth={active ? 2.2 : 1.9} />

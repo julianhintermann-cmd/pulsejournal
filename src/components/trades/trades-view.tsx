@@ -64,7 +64,7 @@ function Summary({ rows }: { rows: TradeRow[] }) {
       <div className="flex flex-col">
         <span className="text-small text-muted-foreground">Netto P&L</span>
         {sums.length === 0 ? (
-          <span className="text-h3 text-faint">–</span>
+          <span className="text-h3 text-muted-foreground">–</span>
         ) : (
           sums.map(([currency, value]) => (
             <PnlValue key={currency} value={value} currency={currency} className="text-h3" />
@@ -364,7 +364,7 @@ export function TradesView({ rows, options, compact }: { rows: TradeRow[]; optio
               </button>
             ) : null}
           </div>
-          <Button variant="outline" onClick={() => setSheetOpen(true)} className="relative">
+          <Button variant="outline" onClick={() => setSheetOpen(true)} className="relative" aria-label="Filter">
             <Filter /> <span className="hidden sm:inline">Filter</span>
             {activeCount > 0 ? (
               <span className="ml-0.5 inline-flex size-5 items-center justify-center rounded-full bg-accent text-[11px] font-semibold text-white">

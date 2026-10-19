@@ -50,7 +50,7 @@ export function SessionsSettings({ initial }: { initial: SessionsConfig }) {
           </div>
         ))}
       </div>
-      <p className="text-small text-faint">
+      <p className="text-small text-muted-foreground">
         Zeiten in der Anzeige-Zeitzone. Beginn inklusive, Ende exklusive; alles andere gilt als „Ausserhalb“. Die
         Einordnung richtet sich nach der ersten Einstiegs-Ausführung.
       </p>

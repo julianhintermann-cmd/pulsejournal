@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 
 import { StatsView } from "@/components/stats/stats-view";
 import { getFilter, type SearchParams } from "@/lib/filter-server";
@@ -11,7 +10,8 @@ export const metadata: Metadata = { title: "Statistiken" };
 
 export default async function StatsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const settings = getSettings();
-  const filter = await getFilter(await searchParams);
+  const params = await searchParams;
+  const filter = await getFilter(params);
   const scope = currencyScope(filter, settings.baseCurrency);
   const ids = scope.accounts.map((a) => a.id);
   const closed = loadClosedTrades(filter, { accountIds: ids });
@@ -24,15 +24,14 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
           Auswertung in {scope.currency}. Konten in anderen Währungen werden separat angezeigt.
         </p>
       ) : null}
-      <Suspense>
-        <StatsView
-          report={report}
-          curve={curve}
-          currency={scope.currency}
-          timeZone={settings.displayTimezone}
-          tradeCount={closed.length}
-        />
-      </Suspense>
+      <StatsView
+        report={report}
+        curve={curve}
+        currency={scope.currency}
+        timeZone={settings.displayTimezone}
+        tradeCount={closed.length}
+        initialTab={typeof params.tab === "string" ? params.tab : "overview"}
+      />
     </div>
   );
 }

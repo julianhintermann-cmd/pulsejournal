@@ -68,7 +68,7 @@ export default function JournalPage() {
                       className="text-[14px] font-semibold"
                     />
                   ))}
-                  <span className="text-small text-faint">
+                  <span className="text-small text-muted-foreground">
                     {d.trades > 0 ? plural(d.trades, "Trade", "Trades") : "Keine Trades"}
                   </span>
                 </span>

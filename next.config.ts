@@ -31,6 +31,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
+  // Do not let `next dev` write an AGENTS.md into the repository.
+  agentRules: false,
   reactStrictMode: true,
   serverExternalPackages: ["better-sqlite3", "sharp", "@node-rs/argon2"],
   env: {

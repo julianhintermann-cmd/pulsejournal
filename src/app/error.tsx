@@ -18,7 +18,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
         <p className="text-body text-muted-foreground">
           Die Seite konnte nicht geladen werden. Deine Daten sind sicher – versuche es noch einmal.
         </p>
-        {error.digest ? <p className="text-small text-faint">Fehler-ID: {error.digest}</p> : null}
+        {error.digest ? <p className="text-small text-muted-foreground">Fehler-ID: {error.digest}</p> : null}
       </div>
       <Button
         onClick={() => {

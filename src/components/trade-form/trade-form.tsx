@@ -77,8 +77,8 @@ function DirectionToggle({ value, onChange }: { value: Direction; onChange: (d: 
               "flex h-12 items-center justify-center gap-2 rounded-control border text-[15px] font-semibold transition-colors",
               active
                 ? d === "long"
-                  ? "border-transparent bg-profit text-white"
-                  : "border-transparent bg-loss text-white"
+                  ? "border-profit/40 bg-profit-soft text-profit"
+                  : "border-loss/40 bg-loss-soft text-loss"
                 : "border-border bg-surface-2 text-muted-foreground hover:text-foreground",
             )}
           >
@@ -126,7 +126,7 @@ function ModeToggle({
         ))}
       </div>
       {quickDisabled ? (
-        <p className="text-small text-faint">Mehrere Ausführungen – nur im Detailmodus bearbeitbar.</p>
+        <p className="text-small text-muted-foreground">Mehrere Ausführungen – nur im Detailmodus bearbeitbar.</p>
       ) : null}
     </div>
   );

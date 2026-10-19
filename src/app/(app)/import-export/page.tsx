@@ -93,14 +93,14 @@ export default async function ImportExportPage({ searchParams }: { searchParams:
               Täglich um 03:30 ({tz}); die letzten {env.backupKeepDays} werden aufbewahrt.
             </p>
             {backups.length === 0 ? (
-              <p className="text-body text-faint">Noch keine automatischen Backups vorhanden.</p>
+              <p className="text-body text-muted-foreground">Noch keine automatischen Backups vorhanden.</p>
             ) : (
               <ul className="flex flex-col divide-y divide-border rounded-[12px] border border-border">
                 {backups.map((b) => (
                   <li key={b.name} className="flex items-center gap-3 px-3 py-2">
                     <span className="flex min-w-0 flex-1 flex-col">
                       <span className="truncate text-[14px] font-medium">{b.name}</span>
-                      <span className="text-small text-faint">
+                      <span className="text-small text-muted-foreground">
                         {formatDateTime(b.createdAt, tz)} · {formatBytes(b.size)}
                       </span>
                     </span>
@@ -132,7 +132,7 @@ export default async function ImportExportPage({ searchParams }: { searchParams:
               <li key={l.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
                 <span className="flex min-w-0 flex-col">
                   <span className="truncate text-[14px] font-medium">{l.fileName}</span>
-                  <span className="text-small text-faint">
+                  <span className="text-small text-muted-foreground">
                     {l.source === "csv" ? "CSV" : "Backup"} · {formatDateTime(l.createdAt, tz)}
                   </span>
                 </span>

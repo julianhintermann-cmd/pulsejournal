@@ -3,8 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { CalendarMonth } from "@/components/calendar-month";
-import { DailyPnlChart } from "@/components/charts/daily-pnl-chart";
-import { EquityChart } from "@/components/charts/equity-chart";
+import { DailyPnlChart, EquityChart } from "@/components/charts/lazy";
 import { DirectionChip } from "@/components/direction-chip";
 import { CandlesIllustration, EmptyState } from "@/components/empty-state";
 import { InstallHint } from "@/components/install-hint";
@@ -140,8 +139,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           format={{ kind: "percent" }}
           delta={p ? delta(m.winRate, p.winRate) : null}
           sub={
-            <span className="flex items-center gap-2">
-              <WinLossDonut wins={m.wins} losses={m.losses} breakEven={m.breakEven} size={28} />
+            <span className="flex items-center gap-1.5 whitespace-nowrap max-sm:text-[11px]">
+              <WinLossDonut wins={m.wins} losses={m.losses} breakEven={m.breakEven} size={24} />
               <span className="tabular-nums">
                 {m.wins} G · {m.losses} V · {m.breakEven} BE
               </span>
@@ -177,7 +176,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         {data.closed.length > 0 ? (
           <EquityChart data={data.curve} currency={currency} timeZone={tz} />
         ) : (
-          <p className="flex h-[260px] items-center justify-center text-body text-faint">
+          <p className="flex h-[260px] items-center justify-center text-body text-muted-foreground">
             Keine abgeschlossenen Trades im Zeitraum.
           </p>
         )}
@@ -192,7 +191,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           {data.daily.length > 0 ? (
             <DailyPnlChart data={data.daily} currency={currency} />
           ) : (
-            <p className="flex h-[200px] items-center justify-center text-body text-faint">Keine Daten im Zeitraum.</p>
+            <p className="flex h-[200px] items-center justify-center text-body text-muted-foreground">
+              Keine Daten im Zeitraum.
+            </p>
           )}
         </Section>
         <Section
@@ -228,7 +229,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           }
         >
           {data.recent.length === 0 ? (
-            <p className="py-6 text-center text-body text-faint">Keine Trades im Zeitraum.</p>
+            <p className="py-6 text-center text-body text-muted-foreground">Keine Trades im Zeitraum.</p>
           ) : (
             <ul className="-mx-2 flex flex-col">
               {data.recent.map((t) => (
@@ -239,7 +240,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                   >
                     <span className="w-20 truncate text-[14px] font-semibold">{t.symbol}</span>
                     <DirectionChip direction={t.direction} size="sm" />
-                    <span className="hidden flex-1 text-small text-faint sm:block">
+                    <span className="hidden flex-1 text-small text-muted-foreground sm:block">
                       <RelativeTime ts={t.closedAt ?? t.openedAt} timeZone={tz} />
                     </span>
                     <span className="flex-1 sm:hidden" />
@@ -261,7 +262,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <Section title="Top Setups">
             {data.setups.length === 0 ? (
               <div className="flex flex-col items-start gap-2 py-2">
-                <p className="text-body text-faint">Noch keine Trades mit Setup im Zeitraum.</p>
+                <p className="text-body text-muted-foreground">Noch keine Trades mit Setup im Zeitraum.</p>
                 <Link href="/playbooks" className="inline-flex items-center gap-1 text-small font-medium text-accent">
                   <BookMarked className="size-3.5" /> Playbooks
                 </Link>
@@ -270,7 +271,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               <ul className="flex flex-col gap-2.5">
                 {data.setups.map((s) => (
                   <li key={s.key}>
-                    <Link href={`/playbooks/${s.key}`} className="flex items-center gap-3">
+                    <Link href={`/playbooks/${s.key}`} prefetch={false} className="flex items-center gap-3">
                       <span className="h-8 w-1 rounded-full" style={{ backgroundColor: s.color }} />
                       <span className="flex min-w-0 flex-1 flex-col">
                         <span className="truncate text-[14px] font-medium">{s.name}</span>
@@ -287,7 +288,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           </Section>
           <Section title="Top-Fehler">
             {data.mistakes.length === 0 ? (
-              <p className="py-2 text-body text-faint">Keine kostspieligen Fehler im Zeitraum. Weiter so!</p>
+              <p className="py-2 text-body text-muted-foreground">Keine kostspieligen Fehler im Zeitraum. Weiter so!</p>
             ) : (
               <ul className="flex flex-col gap-2.5">
                 {data.mistakes.map((mk) => (
@@ -301,7 +302,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                         kostet dich {formatMoney(Math.abs(mk.netPnl), currency, { decimals: 0 })}
                       </span>
                     </span>
-                    <span className="text-small text-faint tabular-nums">{mk.trades}×</span>
+                    <span className="text-small text-muted-foreground tabular-nums">{mk.trades}×</span>
                   </li>
                 ))}
               </ul>

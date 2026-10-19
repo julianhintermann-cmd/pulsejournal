@@ -4,16 +4,21 @@ import { Download, Share, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Logo } from "@/components/logo";
+import { ResponsiveDialog } from "@/components/responsive-dialog";
 import { Button } from "@/components/ui/button";
 
 const DISMISS_KEY = "pulse.installHintDismissed";
 
 type BeforeInstallPromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
 
-/** "Pulse als App installieren" card for mobile browsers that are not running standalone (section 11.4). */
+/**
+ * "Pulse als App installieren" for mobile browsers that are not running standalone (section 11.4).
+ * A compact floating banner; the platform-specific instructions open in a sheet.
+ */
 export function InstallHint() {
   const [platform, setPlatform] = useState<"ios" | "android" | null>(null);
   const [prompt, setPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     let dismissed = false;
@@ -46,52 +51,86 @@ export function InstallHint() {
     } catch {
       // ignore unavailable storage
     }
+    setOpen(false);
     setPlatform(null);
   };
 
+  const install = async () => {
+    if (!prompt) return;
+    await prompt.prompt();
+    await prompt.userChoice;
+    setPrompt(null);
+    dismiss();
+  };
+
   return (
-    <div className="card relative flex items-start gap-3 p-4">
-      <Logo className="size-10" />
-      <div className="flex min-w-0 flex-1 flex-col gap-1 pr-6">
-        <p className="text-h3">Pulse als App installieren</p>
-        {platform === "ios" ? (
-          <p className="text-small text-muted-foreground">
-            Tippe unten auf <Share className="inline size-3.5 align-[-2px]" /> <strong>Teilen</strong> und dann auf{" "}
-            <strong>Zum Home-Bildschirm</strong>.
-          </p>
-        ) : prompt ? (
-          <>
-            <p className="text-small text-muted-foreground">
-              Starte Pulse direkt vom Home-Bildschirm – ohne Browserleiste.
-            </p>
-            <Button
-              size="sm"
-              className="mt-2 w-fit"
-              onClick={async () => {
-                await prompt.prompt();
-                await prompt.userChoice;
-                setPrompt(null);
-                dismiss();
-              }}
-            >
-              <Download /> Installieren
-            </Button>
-          </>
+    <>
+      <div className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+80px)] z-30 flex items-center gap-2 rounded-full border border-border bg-surface-2/95 py-1.5 pr-1.5 pl-2 shadow-overlay backdrop-blur md:hidden">
+        <Logo className="size-7" />
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="min-w-0 flex-1 truncate text-left text-[13px] font-medium"
+        >
+          Als App installieren
+        </button>
+        {platform === "android" && prompt ? (
+          <Button size="xs" className="rounded-full" onClick={install}>
+            Installieren
+          </Button>
         ) : (
-          <p className="text-small text-muted-foreground">
-            Öffne das Browser-Menü (⋮) und wähle <strong>App installieren</strong> bzw.{" "}
-            <strong>Zum Startbildschirm hinzufügen</strong>.
-          </p>
+          <Button size="xs" variant="secondary" className="rounded-full" onClick={() => setOpen(true)}>
+            Anleitung
+          </Button>
         )}
+        <button
+          type="button"
+          onClick={dismiss}
+          aria-label="Hinweis schliessen"
+          className="inline-flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-surface-3"
+        >
+          <X className="size-4" />
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={dismiss}
-        aria-label="Hinweis schliessen"
-        className="absolute top-3 right-3 inline-flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-surface-2"
+      <ResponsiveDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Pulse als App installieren"
+        description="Starte Pulse direkt vom Home-Bildschirm – ohne Browserleiste."
+        footer={
+          <>
+            <Button variant="secondary" onClick={dismiss}>
+              Nicht mehr anzeigen
+            </Button>
+            {platform === "android" && prompt ? (
+              <Button onClick={install}>
+                <Download /> Installieren
+              </Button>
+            ) : null}
+          </>
+        }
       >
-        <X className="size-4" />
-      </button>
-    </div>
+        {platform === "ios" ? (
+          <ol className="flex list-decimal flex-col gap-2 pb-1 pl-5 text-body">
+            <li>
+              Tippe in Safari unten auf <Share className="inline size-4 align-[-3px]" /> <strong>Teilen</strong>.
+            </li>
+            <li>
+              Wähle <strong>Zum Home-Bildschirm</strong>.
+            </li>
+            <li>
+              Bestätige mit <strong>Hinzufügen</strong>.
+            </li>
+          </ol>
+        ) : (
+          <ol className="flex list-decimal flex-col gap-2 pb-1 pl-5 text-body">
+            <li>Öffne das Browser-Menü (⋮).</li>
+            <li>
+              Wähle <strong>App installieren</strong> bzw. <strong>Zum Startbildschirm hinzufügen</strong>.
+            </li>
+          </ol>
+        )}
+      </ResponsiveDialog>
+    </>
   );
 }

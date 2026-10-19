@@ -99,7 +99,7 @@ export function ListManager({
         </Button>
       </form>
       {order.length === 0 ? (
-        <p className="py-3 text-center text-small text-faint">Noch keine Einträge.</p>
+        <p className="py-3 text-center text-small text-muted-foreground">Noch keine Einträge.</p>
       ) : (
         <ul className="flex flex-col divide-y divide-border rounded-control border border-border">
           {order.map((item, index) => (
@@ -142,7 +142,7 @@ export function ListManager({
                 <>
                   <span className="flex min-w-0 flex-1 flex-col sm:flex-row sm:items-center sm:gap-3">
                     <span className="truncate text-[14px] sm:flex-1">{item.name}</span>
-                    <span className="shrink-0 text-small text-faint tabular-nums">{item.count} Trades</span>
+                    <span className="shrink-0 text-small text-muted-foreground tabular-nums">{item.count} Trades</span>
                   </span>
                   <div className="-mr-1 flex shrink-0 items-center">
                     {reorderable ? (

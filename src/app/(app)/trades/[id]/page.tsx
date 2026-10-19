@@ -60,7 +60,7 @@ function Card({
 function Stars({ value }: { value: number | null }) {
   if (value == null) return <span className="text-faint">–</span>;
   return (
-    <span className="inline-flex items-center gap-0.5" aria-label={`${value} von 5`}>
+    <span role="img" className="inline-flex items-center gap-0.5" aria-label={`${value} von 5`}>
       {[1, 2, 3, 4, 5].map((n) => (
         <Star key={n} className={cn("size-4", n <= value ? "fill-be text-be" : "text-faint")} strokeWidth={1.75} />
       ))}
@@ -111,7 +111,10 @@ export default async function TradeDetailPage({
               {detail.playbook ? (
                 <>
                   {" · "}
-                  <Link href={`/playbooks/${detail.playbook.id}`} className="text-foreground hover:underline">
+                  <Link
+                    href={`/playbooks/${detail.playbook.id}`}
+                    className="text-foreground underline decoration-border underline-offset-4 hover:decoration-foreground"
+                  >
                     {detail.playbook.name}
                   </Link>
                 </>

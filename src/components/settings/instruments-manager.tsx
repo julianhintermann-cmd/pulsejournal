@@ -171,7 +171,7 @@ export function InstrumentsManager({
         </Button>
       </div>
       {items.length === 0 ? (
-        <p className="py-3 text-center text-small text-faint">
+        <p className="py-3 text-center text-small text-muted-foreground">
           Instrumente werden beim Erfassen eines Trades automatisch angelegt.
         </p>
       ) : (
@@ -185,7 +185,7 @@ export function InstrumentsManager({
                   {item.tickSize != null ? ` · Tick ${formatDecimal(item.tickSize, 8)}` : ""}
                 </span>
               </div>
-              <span className="shrink-0 text-small text-faint tabular-nums">{item.count} Trades</span>
+              <span className="shrink-0 text-small text-muted-foreground tabular-nums">{item.count} Trades</span>
               <Button
                 variant="ghost"
                 size="icon-sm"

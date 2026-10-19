@@ -64,8 +64,8 @@ function YesNo({ value, onChange }: { value: boolean | null; onChange: (v: boole
             "h-9 min-w-16 rounded-[7px] px-4 text-[13px] font-semibold transition-colors md:h-8",
             value === o.v
               ? o.v
-                ? "bg-profit text-white"
-                : "bg-loss text-white"
+                ? "bg-profit-soft text-profit"
+                : "bg-loss-soft text-loss"
               : "text-muted-foreground hover:text-foreground",
           )}
         >

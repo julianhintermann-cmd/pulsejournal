@@ -123,7 +123,7 @@ function AccountOptions({ value, onSelect }: { value: string | null; onSelect: (
         <OptionRow key={a.id} selected={value === a.id} onSelect={() => onSelect(a.id)}>
           <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: a.color }} />
           <span className="truncate">{a.name}</span>
-          <span className="text-small text-faint">{a.currency}</span>
+          <span className="text-small text-muted-foreground">{a.currency}</span>
         </OptionRow>
       ))}
     </div>

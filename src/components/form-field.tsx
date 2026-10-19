@@ -32,7 +32,7 @@ export function FormField({
           {error}
         </p>
       ) : hint ? (
-        <p className="text-small text-faint">{hint}</p>
+        <p className="text-small text-muted-foreground">{hint}</p>
       ) : null}
     </div>
   );

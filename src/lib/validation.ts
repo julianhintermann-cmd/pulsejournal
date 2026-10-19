@@ -11,6 +11,9 @@ import {
   TIMEFRAMES,
 } from "@/lib/db/schema";
 
+// No `new Function` probing / JIT: keeps the strict CSP (no 'unsafe-eval') free of violations.
+z.config({ jitless: true });
+
 export const CURRENCIES = ["CHF", "EUR", "USD", "GBP"] as const;
 export const PALETTE = [
   "#4F7CFF",

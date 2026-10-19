@@ -1,9 +1,7 @@
-"use client";
-
 import Link from "next/link";
 
 import { monthGrid, weekdayLabels, type MonthKey } from "@/lib/calendar";
-import { formatMoneyCompact, plural } from "@/lib/format";
+import { formatDayKey, formatMoneyCompact, plural } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export type CalendarDayData = { netPnl: number; trades: number; journal: boolean };
@@ -61,6 +59,7 @@ export function CalendarMonth({
             )}
           >
             {n}
+            <span className="sr-only"> {formatDayKey(day, "MMMM yyyy")}</span>
           </span>
           {!mini && data?.journal ? (
             <span className="size-1.5 rounded-full bg-accent" aria-label="Journal-Eintrag" />
@@ -100,12 +99,14 @@ export function CalendarMonth({
         )}
       >
         {labels.map((l) => (
-          <span key={l} className="px-1 text-center text-[11px] font-semibold text-faint uppercase">
+          <span key={l} className="px-1 text-center text-[11px] font-semibold text-muted-foreground uppercase">
             {l}
           </span>
         ))}
         {!mini ? (
-          <span className="hidden px-1 text-center text-[11px] font-semibold text-faint uppercase md:block">Woche</span>
+          <span className="hidden px-1 text-center text-[11px] font-semibold text-muted-foreground uppercase md:block">
+            Woche
+          </span>
         ) : null}
       </div>
       {weeks.map((week, wi) => {
@@ -127,9 +128,9 @@ export function CalendarMonth({
                   <Link
                     key={day}
                     href={`/journal/${day}`}
+                    prefetch={false}
                     className={cn(cellClass, "bg-surface-2/60 hover:border-border")}
                     style={cellStyle(days[day], max)}
-                    aria-label={day}
                   >
                     {dayContent(day)}
                   </Link>
@@ -140,7 +141,7 @@ export function CalendarMonth({
                     onClick={() => onSelect?.(day)}
                     className={cn(cellClass, "bg-surface-2/60 hover:border-border")}
                     style={cellStyle(days[day], max)}
-                    aria-label={day}
+                    data-day={day}
                   >
                     {dayContent(day)}
                   </button>

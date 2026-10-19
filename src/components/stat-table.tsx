@@ -33,7 +33,8 @@ export function StatTable({
   hideEmpty?: boolean;
 }) {
   const shown = hideEmpty ? rows.filter((r) => r.trades > 0) : rows;
-  if (shown.length === 0) return <p className="py-6 text-center text-body text-faint">Keine Daten im Zeitraum.</p>;
+  if (shown.length === 0)
+    return <p className="py-6 text-center text-body text-muted-foreground">Keine Daten im Zeitraum.</p>;
   return (
     <div className="-mx-4 overflow-x-auto md:mx-0">
       <table
@@ -66,7 +67,7 @@ export function StatTable({
                     ) : null}
                     <span className="font-medium">{r.label}</span>
                     {lowData && r.trades > 0 ? (
-                      <span className="text-[11px] whitespace-nowrap text-faint">
+                      <span className="text-[11px] whitespace-nowrap text-muted-foreground">
                         Zu wenig Daten (&lt; {minTrades} Trades)
                       </span>
                     ) : null}

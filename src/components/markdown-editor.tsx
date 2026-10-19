@@ -3,7 +3,12 @@
 import { Bold, Italic, Link2, List, ListChecks } from "lucide-react";
 import { useRef, useState } from "react";
 
-import { MarkdownView } from "@/components/markdown-view";
+import dynamic from "next/dynamic";
+
+// react-markdown is only needed for the preview tab.
+const MarkdownView = dynamic(() => import("@/components/markdown-view").then((m) => m.MarkdownView), {
+  loading: () => <p className="text-body text-muted-foreground">…</p>,
+});
 import { cn } from "@/lib/utils";
 
 type Action = {
@@ -95,7 +100,7 @@ export function MarkdownEditor({
         className,
       )}
     >
-      <div className="flex items-center gap-1 border-b border-border px-1 py-1 sm:px-1.5">
+      <div className="flex flex-wrap items-center gap-1 border-b border-border px-1 py-1 sm:px-1.5">
         <div className="flex items-center gap-0.5" role="tablist">
           {(["write", "preview"] as const).map((t) => (
             <button
@@ -143,7 +148,11 @@ export function MarkdownEditor({
         />
       ) : (
         <div className="min-h-[120px] px-3 py-2.5">
-          {value.trim() ? <MarkdownView value={value} /> : <p className="text-body text-faint">Nichts zum Anzeigen.</p>}
+          {value.trim() ? (
+            <MarkdownView value={value} />
+          ) : (
+            <p className="text-body text-muted-foreground">Nichts zum Anzeigen.</p>
+          )}
         </div>
       )}
     </div>

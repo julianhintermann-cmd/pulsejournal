@@ -9,10 +9,7 @@ import type { Theme } from "@/lib/db/schema";
 import "./globals.css";
 
 const inter = localFont({
-  src: [
-    { path: "../assets/fonts/InterVariable.woff2", weight: "100 900", style: "normal" },
-    { path: "../assets/fonts/InterVariable-Italic.woff2", weight: "100 900", style: "italic" },
-  ],
+  src: [{ path: "../assets/fonts/InterVariable.woff2", weight: "100 900", style: "normal" }],
   variable: "--font-inter",
   display: "swap",
 });

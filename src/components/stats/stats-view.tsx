@@ -1,11 +1,9 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 
-import { BarListChart } from "@/components/charts/bar-list-chart";
-import { DrawdownChart } from "@/components/charts/drawdown-chart";
-import { EquityChart } from "@/components/charts/equity-chart";
-import { Histogram } from "@/components/charts/histogram";
+import { BarListChart, DrawdownChart, EquityChart, Histogram } from "@/components/charts/lazy";
 import { PnlValue } from "@/components/pnl-value";
 import { RValue } from "@/components/r-value";
 import { StatTable } from "@/components/stat-table";
@@ -90,10 +88,10 @@ function ScaleRates({ rows }: { rows: GroupRow[] }) {
             className="flex flex-col items-center gap-1 rounded-[12px] bg-surface-2 px-1 py-3 text-center"
           >
             <span className="text-small text-muted-foreground">{r.label}</span>
-            <span className={cn("text-h3 tabular-nums", low && "text-faint")}>
+            <span className={cn("text-h3 tabular-nums", low && "text-muted-foreground")}>
               {r.trades > 0 ? formatPercent(r.winRate, { decimals: 0 }) : "–"}
             </span>
-            <span className="text-[11px] text-faint">{plural(r.trades, "Trade", "Trades")}</span>
+            <span className="text-[11px] text-muted-foreground">{plural(r.trades, "Trade", "Trades")}</span>
           </div>
         );
       })}
@@ -107,28 +105,30 @@ export function StatsView({
   currency,
   timeZone,
   tradeCount,
+  initialTab,
 }: {
   report: Report;
   curve: EquityPoint[];
   currency: string;
   timeZone: string;
   tradeCount: number;
+  initialTab: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const tab = TABS.some((t) => t.value === searchParams.get("tab")) ? (searchParams.get("tab") as string) : "overview";
+  const [tab, setTabState] = useState(TABS.some((t) => t.value === initialTab) ? initialTab : "overview");
   const m = report.metrics;
   const money = (v: number) => formatMoneyCompact(v);
   const lowDataHint = (rows: GroupRow[]) =>
     rows.some((r) => r.trades > 0 && r.trades < MIN_BUCKET_TRADES) ? (
-      <p className="mt-2 text-small text-faint">
+      <p className="mt-2 text-small text-muted-foreground">
         Zu wenig Daten (&lt; {MIN_BUCKET_TRADES} Trades) – blasse Werte mit Vorsicht lesen.
       </p>
     ) : null;
 
   const setTab = (value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
+    setTabState(value);
+    const params = new URLSearchParams(window.location.search);
     params.set("tab", value);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
@@ -315,17 +315,17 @@ export function StatsView({
               </div>
             </>
           ) : (
-            <p className="py-6 text-center text-body text-faint">Keine Emotionen erfasst.</p>
+            <p className="py-6 text-center text-body text-muted-foreground">Keine Emotionen erfasst.</p>
           )}
         </Panel>
         <Panel title="Kosten pro Fehler">
           {report.mistakeCosts.length === 0 ? (
-            <p className="py-6 text-center text-body text-faint">Keine Fehler erfasst.</p>
+            <p className="py-6 text-center text-body text-muted-foreground">Keine Fehler erfasst.</p>
           ) : (
             <ul className="flex flex-col">
               {report.mistakeCosts.map((mk, i) => (
                 <li key={mk.id} className="flex items-center gap-3 border-b border-border py-2.5 last:border-b-0">
-                  <span className="w-5 text-small text-faint tabular-nums">{i + 1}.</span>
+                  <span className="w-5 text-small text-muted-foreground tabular-nums">{i + 1}.</span>
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate text-[14px] font-medium">{mk.label}</span>
                     <span className="text-small text-muted-foreground">
@@ -362,7 +362,9 @@ export function StatsView({
               height={300}
             />
           ) : (
-            <p className="py-10 text-center text-body text-faint">Keine Trades mit Stop Loss (R) im Zeitraum.</p>
+            <p className="py-10 text-center text-body text-muted-foreground">
+              Keine Trades mit Stop Loss (R) im Zeitraum.
+            </p>
           )}
         </Panel>
       </TabsContent>

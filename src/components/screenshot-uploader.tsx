@@ -148,7 +148,7 @@ export function ScreenshotUploader({
             <Upload /> Dateien wählen
           </Button>
         </div>
-        <p className="text-small text-faint">JPEG, PNG, WebP oder HEIC · max. 15 MB pro Bild</p>
+        <p className="text-small text-muted-foreground">JPEG, PNG, WebP oder HEIC · max. 15 MB pro Bild</p>
         <input
           ref={fileRef}
           type="file"

@@ -47,7 +47,7 @@ export function TopBar({ onOpenCommand }: { onOpenCommand: () => void }) {
           >
             <Search />
             <span className="hidden xl:inline">Suchen</span>
-            <kbd className="rounded-[5px] border border-border bg-surface-2 px-1.5 font-sans text-[11px] text-faint">
+            <kbd className="rounded-[5px] border border-border bg-surface-2 px-1.5 font-sans text-[11px] text-muted-foreground">
               ⌘K
             </kbd>
           </Button>

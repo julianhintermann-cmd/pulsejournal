@@ -14,6 +14,7 @@ export function TradeCard({ trade, timeZone }: { trade: TradeRow; timeZone: stri
   return (
     <Link
       href={`/trades/${trade.id}`}
+      prefetch={false}
       className="flex items-center gap-3 px-4 py-3 transition-colors active:bg-surface-2 [li:last-child>&]:rounded-b-card"
     >
       {trade.thumb ? (

@@ -42,7 +42,12 @@ function Stepper({ step }: { step: number }) {
       {STEPS.map((label, i) => (
         <li key={label} className="flex flex-col gap-1.5">
           <span className={cn("h-1 rounded-full", i <= step ? "bg-accent" : "bg-surface-3")} />
-          <span className={cn("text-[11px] font-medium sm:text-small", i === step ? "text-foreground" : "text-faint")}>
+          <span
+            className={cn(
+              "text-[11px] font-medium sm:text-small",
+              i === step ? "text-foreground" : "text-muted-foreground",
+            )}
+          >
             <span className="tabular-nums">{i + 1}.</span> <span className="hidden sm:inline">{label}</span>
           </span>
         </li>
@@ -273,7 +278,7 @@ export function CsvImportWizard({
               <div key={header} className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[14px] font-medium">{header}</p>
-                  <p className="truncate text-small text-faint">
+                  <p className="truncate text-small text-muted-foreground">
                     {parsed.rows
                       .slice(0, 3)
                       .map((r) => r[header])
@@ -386,7 +391,7 @@ export function CsvImportWizard({
             </table>
           </div>
           {results.length > 20 ? (
-            <p className="text-small text-faint">Vorschau der ersten 20 von {results.length} Zeilen.</p>
+            <p className="text-small text-muted-foreground">Vorschau der ersten 20 von {results.length} Zeilen.</p>
           ) : null}
           <div className="flex justify-between gap-2">
             <Button variant="ghost" onClick={() => setStep(1)}>

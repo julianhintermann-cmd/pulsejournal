@@ -6,7 +6,13 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import { PlaybookFormDialog, type EditablePlaybook } from "@/components/playbooks/playbook-form-dialog";
+import dynamic from "next/dynamic";
+
+import type { EditablePlaybook } from "@/components/playbooks/playbook-form-dialog";
+
+const PlaybookFormDialog = dynamic(() =>
+  import("@/components/playbooks/playbook-form-dialog").then((m) => m.PlaybookFormDialog),
+);
 import { Button } from "@/components/ui/button";
 import { deletePlaybook, setPlaybookArchived } from "@/server/actions/playbooks";
 

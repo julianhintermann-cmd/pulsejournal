@@ -64,7 +64,7 @@ export function LoginForm({ next }: { next: string | null }) {
         {pending ? <Loader2 className="animate-spin" /> : null}
         Anmelden
       </Button>
-      <p className="text-center text-small text-faint">Du bleibst 30 Tage angemeldet.</p>
+      <p className="text-center text-small text-muted-foreground">Du bleibst 30 Tage angemeldet.</p>
     </form>
   );
 }

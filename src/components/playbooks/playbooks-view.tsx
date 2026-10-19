@@ -6,7 +6,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { EmptyState } from "@/components/empty-state";
-import { PlaybookFormDialog } from "@/components/playbooks/playbook-form-dialog";
+import dynamic from "next/dynamic";
+
+const PlaybookFormDialog = dynamic(() =>
+  import("@/components/playbooks/playbook-form-dialog").then((m) => m.PlaybookFormDialog),
+);
 import { RValue } from "@/components/r-value";
 import { Sparkline } from "@/components/sparkline";
 import { Button } from "@/components/ui/button";

@@ -12,8 +12,15 @@ Assumptions and choices made where the specification left room. Format: file pat
 - `src/components/responsive-dialog.tsx` – Bottom sheets are built from Radix Dialog + motion (spring 400/40, drag handle) instead of adding `vaul`.
 - `src/components/global-filter.tsx` – The custom date range uses two native date inputs instead of adding `react-day-picker`.
 - `src/app/layout.tsx` – Theme switching uses a server-rendered `data-theme` attribute from the settings instead of `next-themes`.
-- `src/assets/fonts/` – Inter variable (latin subset, normal + italic) from `@fontsource-variable/inter` 5.3.0 is committed; no runtime font requests.
+- `src/assets/fonts/` – Inter variable (latin subset, upright) from `@fontsource-variable/inter` 5.3.0 is committed; italic is synthesized so only one font file is preloaded.
 - `src/lib/format.ts` – Numbers are formatted deterministically (’ grouping, true minus) instead of `Intl`, because Node's ICU uses a different group separator than browsers and would cause hydration mismatches.
+
+- `src/components/app-shell.tsx` – Skeletons are shown by the app shell for client-side navigations that take longer than 150 ms instead of route-level `loading.tsx`, because streamed loading boundaries delay the real content of the initial page (LCP) even when the server answers in ~30 ms.
+- `src/components/app-shell.tsx` – The page transition is a CSS animation that only runs for client-side navigations, so the first paint is never hidden behind JavaScript.
+- `src/components/charts/lazy.tsx` – Recharts is loaded after the `load` event when the browser is idle and charts render one per idle period once scrolled near the viewport; placeholders reserve the chart height (no layout shift).
+- `src/components/responsive-dialog.tsx` – The motion-based dialog/sheet implementation is loaded when a dialog opens for the first time; the command palette likewise loads on first use.
+- `src/components/install-hint.tsx` – The install hint is a compact floating banner above the tab bar whose instructions open in a sheet, so it neither shifts the layout nor becomes the page's largest paint.
+- `src/lib/validation.ts` – zod runs with `jitless: true`, so its `new Function` capability probe does not trigger CSP violations.
 
 ## Auth and security
 
@@ -84,4 +91,4 @@ Assumptions and choices made where the specification left room. Format: file pat
 - `docker/entrypoint.sh` – When the container is started as a non-root user, the entrypoint skips user creation, chown and gosu.
 - `.github/workflows/ci.yml` – pnpm is enabled via corepack and cached with `actions/cache` to use only official `actions/*` actions; CI also runs the Playwright smoke test.
 - `public/sw.js` – Navigations are cached network-first for the offline fallback, so recently viewed pages are stored in the browser cache of the device.
-- `scripts/seed-demo.ts` – Demo break-even trades use manual P&L 0 so fees do not turn them into losses; the outcome mix is fixed (29 wins, 28 losses, 3 BE ≈ 48 % win rate).
+- `scripts/seed-demo.ts` – Demo break-even trades use manual P&L 0 so fees do not turn them into losses; the outcome mix is fixed (27 wins, 30 losses, 3 BE ≈ 47 % win rate without BE).

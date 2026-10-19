@@ -165,14 +165,14 @@ function AccountCard({
           </button>
           {showCash ? (
             account.cash.length === 0 ? (
-              <p className="pt-3 text-small text-faint">Noch keine Ein- oder Auszahlungen.</p>
+              <p className="pt-3 text-small text-muted-foreground">Noch keine Ein- oder Auszahlungen.</p>
             ) : (
               <ul className="flex flex-col divide-y divide-border pt-2">
                 {account.cash.map((c) => (
                   <li key={c.id} className="flex items-center gap-3 py-2">
                     <div className="flex min-w-0 flex-1 flex-col">
                       <span className="text-[13px] font-medium">{CASH_TYPE_LABELS[c.type]}</span>
-                      <span className="truncate text-small text-faint">
+                      <span className="truncate text-small text-muted-foreground">
                         {formatDate(c.occurredAt, timeZone)}
                         {c.note ? ` · ${c.note}` : ""}
                       </span>

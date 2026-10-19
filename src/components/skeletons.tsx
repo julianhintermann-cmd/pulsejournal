@@ -131,3 +131,13 @@ export function StatsSkeleton() {
     </div>
   );
 }
+
+/** Skeleton matching the layout of the route that is being navigated to. */
+export function RouteSkeleton({ pathname }: { pathname: string }) {
+  if (pathname === "/") return <DashboardSkeleton />;
+  if (pathname === "/trades" || pathname === "/journal") return <ListSkeleton />;
+  if (pathname === "/calendar") return <CalendarSkeleton />;
+  if (pathname === "/stats") return <StatsSkeleton />;
+  if (pathname === "/playbooks" || pathname === "/accounts") return <GridSkeleton />;
+  return <PageSkeleton />;
+}

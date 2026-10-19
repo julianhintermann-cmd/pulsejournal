@@ -196,10 +196,10 @@ export function seedDemo() {
   const mistakeRows = db.select().from(mistakes).all();
   const now = Date.now();
   const day = 86_400_000;
-  // Fixed outcome mix (29 wins, 28 losses, 3 break-even ≈ 48 % win rate), shuffled deterministically.
+  // Fixed outcome mix (27 wins, 30 losses, 3 break-even ≈ 47 % win rate without BE), shuffled deterministically.
   const outcomes: ("win" | "loss" | "be")[] = [
-    ...Array(29).fill("win"),
-    ...Array(28).fill("loss"),
+    ...Array(27).fill("win"),
+    ...Array(30).fill("loss"),
     ...Array(3).fill("be"),
   ];
   for (let i = outcomes.length - 1; i > 0; i--) {

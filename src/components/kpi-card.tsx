@@ -3,17 +3,29 @@
 import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
 
-import { formatMoney, formatNumber, formatPercent, formatR, formatRatio } from "@/lib/format";
+import { formatMoney, formatNumber, formatPercent, formatR, formatRatio, NBSP } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export type KpiFormat = { kind: "money"; currency: string } | { kind: "percent" } | { kind: "ratio" } | { kind: "r" };
 
-function format(value: number | null, f: KpiFormat) {
+/** Renders the KPI value; `final` (the target value) decides the decimals so the count-up does not jitter. */
+function format(value: number | null, f: KpiFormat, final: number | null): React.ReactNode {
   if (value == null) return "n/a";
   switch (f.kind) {
-    case "money":
-      // Large amounts drop the cents so the value fits a 2-column phone layout.
-      return formatMoney(value, f.currency, { signed: true, decimals: Math.abs(value) >= 1000 ? 0 : 2 });
+    case "money": {
+      // Large amounts drop the cents and the currency code is set smaller so the value fits two phone columns.
+      const decimals = Math.abs(final ?? value) >= 1000 ? 0 : 2;
+      const text = formatMoney(value, f.currency, { signed: true, decimals });
+      const [prefix, amount] = text.split(NBSP);
+      const sign = prefix.slice(0, prefix.length - f.currency.length);
+      return (
+        <>
+          {sign}
+          <span className="mr-[0.18em] text-[0.62em] font-semibold tracking-normal">{f.currency}</span>
+          {amount}
+        </>
+      );
+    }
     case "percent":
       return formatPercent(value);
     case "ratio":
@@ -91,7 +103,7 @@ export function KpiCard({
   className?: string;
 }) {
   const display = useCountUp(value === Number.POSITIVE_INFINITY ? null : value);
-  const shown = value === Number.POSITIVE_INFINITY ? "∞" : format(display, fmt);
+  const shown = value === Number.POSITIVE_INFINITY ? "∞" : format(display, fmt, value);
   const tone =
     fmt.kind === "money" && value != null && Math.round(value * 100) !== 0
       ? value > 0
@@ -128,7 +140,14 @@ export function KpiCard({
             </span>
           ) : null}
         </div>
-        <span className={cn("truncate text-kpi-sm whitespace-nowrap tabular-nums md:text-kpi", tone)}>{shown}</span>
+        <span
+          className={cn(
+            "truncate text-kpi-sm whitespace-nowrap tabular-nums max-[359px]:text-[20px] max-[359px]:leading-[26px] md:text-kpi",
+            tone,
+          )}
+        >
+          {shown}
+        </span>
         {sub ? <span className="text-small text-muted-foreground">{sub}</span> : null}
       </div>
       {chart ? <div className="-mt-1">{chart}</div> : null}

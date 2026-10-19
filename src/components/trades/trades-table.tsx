@@ -79,8 +79,13 @@ export function TradesTable({
   useEffect(() => {
     try {
       const stored = localStorage.getItem(VISIBILITY_KEY);
-
-      if (stored) setVisibility(JSON.parse(stored) as VisibilityState);
+      // Without a stored preference, narrow desktops start with the less important columns hidden.
+      const initial: VisibilityState | null = stored
+        ? (JSON.parse(stored) as VisibilityState)
+        : window.innerWidth < 1280
+          ? { session: false, qty: false, tags: false }
+          : null;
+      if (initial) setVisibility(initial);
     } catch {
       // ignore unavailable storage
     }
@@ -226,7 +231,7 @@ export function TradesTable({
               </span>
             ))}
             {row.original.tags.length > 3 ? (
-              <span className="text-[11px] text-faint">+{row.original.tags.length - 3}</span>
+              <span className="text-[11px] text-muted-foreground">+{row.original.tags.length - 3}</span>
             ) : null}
           </span>
         ),
