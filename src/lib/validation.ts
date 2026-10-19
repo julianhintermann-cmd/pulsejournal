@@ -235,6 +235,13 @@ export const playbookSchema = z.object({
 });
 export type PlaybookInput = z.infer<typeof playbookSchema>;
 
+export const playbookFormSchema = z.object({
+  name: z.string().trim().min(1, MSG.required).max(80),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
+  description: z.string().max(20_000),
+});
+export type PlaybookFormValues = z.infer<typeof playbookFormSchema>;
+
 // ---------- Trades ----------
 
 export const executionSchema = z.object({
