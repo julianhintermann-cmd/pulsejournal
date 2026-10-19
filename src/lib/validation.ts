@@ -460,6 +460,7 @@ export const CSV_TARGET_FIELDS = [
   "swap",
   "netPnl",
   "notes",
+  "externalId",
 ] as const;
 export type CsvTargetField = (typeof CSV_TARGET_FIELDS)[number];
 

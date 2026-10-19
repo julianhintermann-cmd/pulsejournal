@@ -19,7 +19,8 @@ home NAS, keeps everything in SQLite plus an uploads folder on one volume and in
   sleep and focus with autosave.
 - **Playbooks** with rules, per-setup stats and "best examples" gallery.
 - **Accounts** (live, demo, prop, funded) with deposits, withdrawals, fees and payouts.
-- **Import / export** – CSV import wizard with column mapping, saved mappings and duplicate detection, CSV
+- **Import / export** – CSV import wizard with column mapping, saved mappings, duplicate detection and automatic
+  recognition of TradingView trade history exports (paper trading), CSV
   export, full backup zip, automatic daily backups and one-click restore.
 - **Installable PWA** with offline fallback, command palette (⌘K), keyboard shortcuts, dark and light theme.
 

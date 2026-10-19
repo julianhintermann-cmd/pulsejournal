@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CircleAlert, FileSpreadsheet, Loader2, Trash2, Upload } from "lucide-react";
+import { Check, CircleAlert, FileSpreadsheet, Info, Loader2, Trash2, Upload } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -22,6 +22,7 @@ import {
   parseCsv,
   type ParsedCsv,
 } from "@/lib/import/csv";
+import { convertTradingView } from "@/lib/import/tradingview";
 import { cn } from "@/lib/utils";
 import { CSV_TARGET_FIELDS, type CsvMapping } from "@/lib/validation";
 import { deleteCsvMapping, importCsv, saveCsvMapping } from "@/server/actions/import";
@@ -35,6 +36,20 @@ const DELIMITERS: { value: CsvMapping["delimiter"]; label: string }[] = [
 ];
 
 type SavedMapping = { id: string; name: string; mapping: CsvMapping };
+type DetectedFormat = { name: string; rows: number; trades: number; currency: string | null };
+
+function DetectedNotice({ detected, timeZone }: { detected: DetectedFormat; timeZone: string }) {
+  return (
+    <p className="flex items-start gap-2 rounded-[12px] bg-accent-soft px-3 py-2.5 text-small">
+      <Info className="mt-0.5 size-4 shrink-0 text-accent" />
+      <span>
+        <span className="font-medium">{detected.name}-Export erkannt:</span> {plural(detected.rows, "Zeile", "Zeilen")}{" "}
+        zu {plural(detected.trades, "Trade", "Trades")} zusammengefasst. Zeiten werden in der Zeitzone {timeZone}{" "}
+        gelesen.
+      </span>
+    </p>
+  );
+}
 
 function Stepper({ step }: { step: number }) {
   return (
@@ -81,6 +96,7 @@ export function CsvImportWizard({
     shortValue: "Short",
   });
   const [mappingName, setMappingName] = useState("");
+  const [detected, setDetected] = useState<DetectedFormat | null>(null);
   const [accountId, setAccountId] = useState(defaultAccountId ?? accounts[0]?.id ?? "");
   const [playbookId, setPlaybookId] = useState("");
   const [skipDuplicates, setSkipDuplicates] = useState(true);
@@ -109,6 +125,24 @@ export function CsvImportWizard({
       return;
     }
     const content = await file.text();
+    const tradingView = convertTradingView(content);
+    if (tradingView) {
+      setFileName(file.name);
+      setText(tradingView.text);
+      setMapping(tradingView.mapping);
+      setDetected({
+        name: "TradingView",
+        rows: tradingView.rows,
+        trades: tradingView.trades,
+        currency: tradingView.currency,
+      });
+      const matching = accounts.find((a) => a.currency === tradingView.currency);
+      const current = accounts.find((a) => a.id === accountId);
+      if (matching && current?.currency !== tradingView.currency) setAccountId(matching.id);
+      setResult(null);
+      setStep(2);
+      return;
+    }
     const delimiter = detectDelimiter(content);
     const headers = parseCsv(content, delimiter).headers;
     if (headers.length === 0) {
@@ -119,6 +153,7 @@ export function CsvImportWizard({
     setFileName(file.name);
     setText(content);
     setMapping((m) => ({ ...m, delimiter, decimalSeparator, columns: guessColumns(headers) }));
+    setDetected(null);
     setResult(null);
     setStep(1);
   };
@@ -156,8 +191,12 @@ export function CsvImportWizard({
     setStep(0);
     setText("");
     setFileName("");
+    setDetected(null);
     setResult(null);
   };
+
+  const targetCurrency = accounts.find((a) => a.id === accountId)?.currency;
+  const currencyMismatch = detected?.currency && targetCurrency && detected.currency !== targetCurrency;
 
   return (
     <div className="flex flex-col gap-5">
@@ -178,7 +217,7 @@ export function CsvImportWizard({
             <FileSpreadsheet className="size-10 text-faint" strokeWidth={1.5} />
             <span className="text-h3">CSV-Datei wählen</span>
             <span className="text-small text-muted-foreground">
-              oder hierher ziehen · Export deines Brokers, max. 15 MB
+              oder hierher ziehen · Export deines Brokers oder von TradingView, max. 15 MB
             </span>
           </button>
           <input
@@ -196,6 +235,7 @@ export function CsvImportWizard({
 
       {step === 1 ? (
         <div className="flex flex-col gap-5">
+          {detected ? <DetectedNotice detected={detected} timeZone={timeZone} /> : null}
           <p className="text-body text-muted-foreground">
             <span className="font-medium text-foreground">{fileName}</span> ·{" "}
             {plural(parsed.rows.length, "Zeile", "Zeilen")} · {plural(parsed.headers.length, "Spalte", "Spalten")}
@@ -341,11 +381,13 @@ export function CsvImportWizard({
 
       {step === 2 ? (
         <div className="flex flex-col gap-4">
+          {detected ? <DetectedNotice detected={detected} timeZone={timeZone} /> : null}
           <p className="text-body">
             <span className="font-semibold text-profit">{valid}</span> von {results.length} Zeilen gültig
             {results.length - valid > 0 ? (
               <span className="text-loss"> · {results.length - valid} werden übersprungen</span>
             ) : null}
+            {detected ? " (eine Zeile pro Trade)" : null}
           </p>
           <div className="-mx-4 overflow-x-auto md:mx-0">
             <table className="w-full min-w-[720px] border-separate border-spacing-0 text-[13px]">
@@ -456,6 +498,19 @@ export function CsvImportWizard({
                   </NativeSelect>
                 </FormField>
               </div>
+              {currencyMismatch ? (
+                <p className="flex items-start gap-2 rounded-[12px] bg-loss-soft px-3 py-2.5 text-small">
+                  <CircleAlert className="mt-0.5 size-4 shrink-0 text-loss" />
+                  <span>
+                    Die P&L in der Datei ist in {detected?.currency}, das Zielkonto führt {targetCurrency}. Wähle ein{" "}
+                    {detected?.currency}-Konto oder lege unter{" "}
+                    <Link href="/accounts" className="font-medium underline underline-offset-2">
+                      Konten
+                    </Link>{" "}
+                    eines an.
+                  </span>
+                </p>
+              ) : null}
               <label className="flex items-center justify-between gap-4 rounded-[12px] border border-border p-3">
                 <span>
                   <span className="block text-[14px] font-medium">Duplikate überspringen</span>

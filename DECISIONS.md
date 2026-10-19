@@ -78,6 +78,9 @@ Assumptions and choices made where the specification left room. Format: file pat
 ## Import, export and backups
 
 - `src/lib/import/csv.ts` – The entry price is required for CSV rows; a mapped "Netto P&L" column switches the trade to manual P&L, imported fees become trade fees.
+- `src/lib/import/tradingview.ts` – TradingView trade history exports (one row per entry/exit, grouped by trade number) are recognised by their headers and converted to one row per trade; the exchange prefix is dropped from the symbol (`NASDAQ:AAPL` → `AAPL`) and the P&L column is imported as manual net P&L.
+- `src/lib/import/tradingview.ts` – A trade whose exit quantity does not match the entry quantity is imported as an open position.
+- `src/lib/import/csv.ts` – An optional "Trade-ID" column (TradingView: order id of the first entry) is appended to the dedupe key, because exports with minute timestamps contain distinct trades that agree on all other key fields.
 - `src/lib/import/run.ts` – When "Duplikate überspringen" is off, re-imported duplicates are saved without hash (the column is unique).
 - `src/app/api/export/trades.csv/route.ts` – The CSV export adds a "Währung" column next to "Netto P&L" and writes plain numbers with a decimal point.
 - `src/lib/backup.ts` – The backup schema version is the number of shipped migrations; a backup from a newer schema is rejected.

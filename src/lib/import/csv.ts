@@ -18,6 +18,7 @@ export const CSV_FIELD_LABELS: Record<CsvTargetField | "ignore", string> = {
   swap: "Swap",
   netPnl: "Netto P&L",
   notes: "Notizen",
+  externalId: "Trade-ID",
   ignore: "Ignorieren",
 };
 
@@ -82,6 +83,7 @@ const GUESSES: [RegExp, CsvTargetField][] = [
   [/^(swap|rollover|financing)$/i, "swap"],
   [/^(pnl|p&l|profit|net pnl|net p&l|netto p&l|gewinn)$/i, "netPnl"],
   [/^(notes?|comment|kommentar|notiz|notizen)$/i, "notes"],
+  [/^(trade[ -]?id|position[ -]?id|ticket|deal|order[ -]?id)$/i, "externalId"],
 ];
 
 /** Suggests a target field for each header (first match wins, each target used once). */
@@ -139,6 +141,7 @@ export type MappedRow = {
   swap: number;
   netPnl: number | null;
   notes: string | null;
+  externalId: string | null;
 };
 
 export type RowResult = { index: number; ok: true; row: MappedRow } | { index: number; ok: false; error: string };
@@ -201,6 +204,7 @@ export function mapRow(raw: Record<string, string>, index: number, mapping: CsvM
     if (wrong) return fail("Stop Loss liegt auf der falschen Seite des Einstiegs.");
   }
   const notes = (get("notes") ?? "").trim();
+  const externalId = (get("externalId") ?? "").trim().slice(0, 100);
 
   return {
     index,
@@ -219,6 +223,7 @@ export function mapRow(raw: Record<string, string>, index: number, mapping: CsvM
       swap: values.swap ?? 0,
       netPnl: values.netPnl,
       notes: notes ? notes.slice(0, 20_000) : null,
+      externalId: externalId || null,
     },
   };
 }
@@ -227,10 +232,15 @@ export function mapRows(parsed: ParsedCsv, mapping: CsvMapping, timeZone: string
   return parsed.rows.map((raw, i) => mapRow(raw, i, mapping, timeZone));
 }
 
-/** Input of the dedupe hash: account_id|symbol|direction|opened_at|entry_avg|qty. */
+/**
+ * Input of the dedupe hash: account_id|symbol|direction|opened_at|entry_avg|qty, plus |trade_id when the file has a
+ * trade id (exports with minute timestamps can contain distinct trades that agree on all other fields).
+ */
 export function dedupeKey(
   accountId: string,
-  row: Pick<MappedRow, "symbol" | "direction" | "openedAt" | "entry" | "qty">,
+  row: Pick<MappedRow, "symbol" | "direction" | "openedAt" | "entry" | "qty"> & { externalId?: string | null },
 ) {
-  return [accountId, row.symbol, row.direction, row.openedAt, row.entry, row.qty].join("|");
+  const key = [accountId, row.symbol, row.direction, row.openedAt, row.entry, row.qty];
+  if (row.externalId) key.push(row.externalId);
+  return key.join("|");
 }

@@ -106,6 +106,7 @@ describe("CSV import mapping", () => {
         swap: 0,
         netPnl: null,
         notes: null,
+        externalId: null,
       }),
     ).toBe(expected);
     expect(
@@ -119,6 +120,7 @@ describe("CSV import mapping", () => {
         swap: 0,
         netPnl: null,
         notes: null,
+        externalId: null,
       }),
     ).not.toBe(expected);
   });
