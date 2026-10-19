@@ -18,8 +18,9 @@ test("the + button presents the trade form as a sheet with a card stack", async 
 
 test("a dirty trade form asks before it is discarded", async ({ page }) => {
   await page.goto("/trades/new?mode=quick");
-  // A known symbol: a new one creates the instrument on blur and its banner would cover the ✕ for a moment.
-  await page.fill("#symbol", "NAS100");
+  // A plain field: the symbol combobox closes its suggestions on blur, i.e. during the tap on ✕, and mobile WebKit
+  // drops a tap that changes visible content (covered by the manual iPhone checklist instead).
+  await page.fill("#entryPrice", "20000");
   await tap(page, page.getByRole("button", { name: "Abbrechen" }).filter({ visible: true }).first());
   const sheet = page.getByRole("alertdialog");
   await expect(sheet).toBeVisible();
@@ -27,7 +28,7 @@ test("a dirty trade form asks before it is discarded", async ({ page }) => {
   // Keep editing first …
   await tap(page, sheet.getByRole("button", { name: "Weiter bearbeiten" }));
   await expect(sheet).toBeHidden();
-  await expect(page.locator("#symbol")).toHaveValue("NAS100");
+  await expect(page.locator("#entryPrice")).toHaveValue("20000");
   // … then discard.
   await tap(page, page.getByRole("button", { name: "Abbrechen" }).filter({ visible: true }).first());
   await tap(page, page.getByRole("alertdialog").getByRole("button", { name: "Verwerfen" }));

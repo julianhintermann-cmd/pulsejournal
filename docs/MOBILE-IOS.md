@@ -234,7 +234,8 @@ home-screen app need a device. Before a release, on an iPhone with iOS 26 (Safar
    pull to refresh with a haptic at the threshold.
 6. Übersicht: scrub the chart (number and date follow, haptic on start), range presets.
 7. Trade form: Schnell/Detailliert, decimal keyboard with "Weiter", ✓ saves with the checkmark HUD; no zoom on any
-   field.
+   field. Type a symbol (suggestions open) and tap ✕ right away: "Änderungen verwerfen?" must come on the first tap
+   (mobile WebKit in Playwright drops that tap because the suggestions close during it, so this case is manual).
 8. Screenshots: carousel swipe, lightbox pinch zoom, swipe down to close.
 9. Settings → Bedienungshilfen: Bewegung reduzieren (crossfades, no edge swipe), Transparenz reduzieren (solid
    chrome), Kontrast erhöhen (stronger rims), Textgrösse gross (layouts reflow, nothing clipped), VoiceOver (tab bar,
