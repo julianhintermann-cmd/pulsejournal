@@ -5,12 +5,14 @@ import { toast } from "sonner";
 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Switch } from "@/components/ui/switch";
+import { setReducedTransparency, useReducedTransparencySetting } from "@/hooks/ios/use-reduced-transparency";
 import type { Theme } from "@/lib/db/schema";
 import { updateAppearanceSettings } from "@/server/actions/settings";
 
 export function AppearanceSettings({ theme, compactTables }: { theme: Theme; compactTables: boolean }) {
   const [compact, setCompact] = useState(compactTables);
   const [, startTransition] = useTransition();
+  const reduceTransparency = useReducedTransparencySetting();
 
   const toggleCompact = (next: boolean) => {
     setCompact(next);
@@ -41,6 +43,14 @@ export function AppearanceSettings({ theme, compactTables }: { theme: Theme; com
           <p className="text-small text-muted-foreground">Geringere Zeilenhöhe in der Trade-Tabelle.</p>
         </div>
         <Switch checked={compact} onCheckedChange={toggleCompact} />
+      </label>
+      {/* Glass only exists in the phone layout, so the switch is only shown there (stored on this device). */}
+      <label className="flex items-center justify-between gap-4 pt-5 md:hidden">
+        <div>
+          <p className="text-[14px] font-medium">Transparenz reduzieren</p>
+          <p className="text-small text-muted-foreground">Leisten und Menüs ohne Glaseffekt, nur auf diesem Gerät.</p>
+        </div>
+        <Switch checked={reduceTransparency} onCheckedChange={setReducedTransparency} />
       </label>
     </div>
   );

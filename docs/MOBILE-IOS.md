@@ -31,6 +31,20 @@ Notes for the iOS 26 style mobile layer (viewports below 768 px). The audit and 
 - Hooks: `useStandalone`, `useScrollDirection`, `useKeyboardInset`, `useReducedTransparency`.
 - Desktop/tablet pixel diff: only time-dependent content differs (current time, session count, build date).
 
+### M2 – Liquid Glass
+
+- Material tokens and classes in `src/styles/ios.css` (`.glass`, `--clear`, `--prominent`, `--capsule`,
+  `--circle`): backdrop blur + saturate + brightness, adaptive tint, gradient rim (masked `::before`), specular
+  sheen following the finger (`::after`, `--lx/--ly`), soft wide shadow. Tokens follow the app theme
+  (Dunkel/Hell/System), not only the system colour scheme.
+- `GlassSurface` / `GlassButton` (`src/components/ios/glass.tsx`) are the only way glass is created. Press:
+  spring scale to 1.08 and full sheen on touch-down, spring back on release (CSS `linear()` spring, interruptible
+  because transitions retarget from the current value). Only `transform` and `opacity` animate.
+- Reduce Transparency: `prefers-reduced-transparency: reduce` and the new switch "Transparenz reduzieren"
+  (Einstellungen → Darstellung, phone layout only, stored in `localStorage`) turn every glass element into a solid
+  cell with a separator outline. `prefers-contrast: more` raises tint opacity and rim strength.
+  `prefers-reduced-motion` disables the press scale.
+
 ## Deviations from the brief
 
 - Playwright WebKit could not be downloaded in the build sandbox (`cdn.playwright.dev` is blocked there). Local

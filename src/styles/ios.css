@@ -310,3 +310,180 @@
     --ios-label-3: rgba(60, 60, 67, 0.3);
   }
 }
+
+/* ---------- Liquid Glass (control and navigation layer only; see docs/MOBILE-IOS.md) ---------- */
+:root {
+  --glass-blur: 14px;
+  --glass-sat: 190%;
+  --glass-tint: rgba(40, 40, 44, 0.5);
+  --glass-tint-clear: rgba(40, 40, 44, 0.16);
+  --glass-tint-selected: rgba(255, 255, 255, 0.12);
+  --glass-rim-hi: rgba(255, 255, 255, 0.32);
+  --glass-rim-lo: rgba(255, 255, 255, 0.05);
+  --glass-shadow: rgba(0, 0, 0, 0.45);
+  --glass-sheen: rgba(255, 255, 255, 0.22);
+  --glass-label: #ffffff;
+}
+
+:root[data-theme="light"] {
+  --glass-tint: rgba(255, 255, 255, 0.48);
+  --glass-tint-clear: rgba(255, 255, 255, 0.14);
+  --glass-tint-selected: rgba(0, 0, 0, 0.06);
+  --glass-rim-hi: rgba(255, 255, 255, 0.75);
+  --glass-rim-lo: rgba(255, 255, 255, 0.12);
+  --glass-shadow: rgba(0, 0, 0, 0.12);
+  --glass-sheen: rgba(255, 255, 255, 0.5);
+  --glass-label: #000000;
+}
+
+@media (prefers-color-scheme: light) {
+  :root[data-theme="system"] {
+    --glass-tint: rgba(255, 255, 255, 0.48);
+    --glass-tint-clear: rgba(255, 255, 255, 0.14);
+    --glass-tint-selected: rgba(0, 0, 0, 0.06);
+    --glass-rim-hi: rgba(255, 255, 255, 0.75);
+    --glass-rim-lo: rgba(255, 255, 255, 0.12);
+    --glass-shadow: rgba(0, 0, 0, 0.12);
+    --glass-sheen: rgba(255, 255, 255, 0.5);
+    --glass-label: #000000;
+  }
+}
+
+.glass {
+  position: relative;
+  isolation: isolate;
+  color: var(--glass-label);
+  background: var(--glass-tint);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(1.04);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(1.04);
+  box-shadow:
+    inset 0 1px 1px var(--glass-rim-hi),
+    inset 0 -1px 1px var(--glass-rim-lo),
+    0 10px 30px -10px var(--glass-shadow);
+  transform: translateZ(0) scale(var(--glass-scale, 1));
+  transition:
+    transform 420ms var(--ease-spring),
+    background-color 200ms var(--ease-ios);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Gradient rim = the thick-glass edge. */
+.glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    var(--glass-rim-hi),
+    var(--glass-rim-lo) 35%,
+    var(--glass-rim-lo) 65%,
+    var(--glass-rim-hi)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Specular sheen that follows the finger (--lx / --ly are set on pointer move). */
+.glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(140px circle at var(--lx, 50%) var(--ly, -20%), var(--glass-sheen), transparent 60%);
+  opacity: var(--sheen, 0.45);
+  transition: opacity 300ms var(--ease-ios);
+  z-index: -1;
+}
+
+.glass--clear {
+  background: var(--glass-tint-clear);
+}
+
+.glass--prominent {
+  color: #ffffff;
+  background: color-mix(in srgb, var(--accent) 82%, transparent);
+  --glass-rim-hi: rgba(255, 255, 255, 0.5);
+  --glass-sheen: rgba(255, 255, 255, 0.35);
+}
+
+.glass[data-pressed] {
+  --glass-scale: 1.08;
+  --sheen: 1;
+}
+
+.glass--capsule {
+  border-radius: 999px;
+}
+.glass--circle {
+  border-radius: 999px;
+  aspect-ratio: 1;
+}
+
+/* Reduced transparency (system setting or the in-app switch): solid material, no blur. */
+:root[data-reduce-transparency] .glass {
+  background: var(--ios-cell, var(--surface));
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow:
+    0 0 0 0.5px var(--ios-separator, var(--border)),
+    0 6px 20px -8px var(--glass-shadow);
+}
+:root[data-reduce-transparency] .glass::after,
+:root[data-reduce-transparency] .glass::before {
+  display: none;
+}
+:root[data-reduce-transparency] .glass--prominent {
+  background: var(--accent);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: var(--ios-cell, var(--surface));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow:
+      0 0 0 0.5px var(--ios-separator, var(--border)),
+      0 6px 20px -8px var(--glass-shadow);
+  }
+  .glass::after,
+  .glass::before {
+    display: none;
+  }
+  .glass--prominent {
+    background: var(--accent);
+  }
+}
+
+/* Increased contrast: stronger rim and less see-through tint. */
+@media (prefers-contrast: more) {
+  :root {
+    --glass-tint: rgba(40, 40, 44, 0.75);
+    --glass-tint-clear: rgba(40, 40, 44, 0.41);
+    --glass-rim-hi: rgba(255, 255, 255, 0.6);
+    --glass-rim-lo: rgba(255, 255, 255, 0.3);
+    --ios-separator: rgba(160, 160, 168, 0.9);
+  }
+  :root[data-theme="light"] {
+    --glass-tint: rgba(255, 255, 255, 0.73);
+    --glass-tint-clear: rgba(255, 255, 255, 0.39);
+    --glass-rim-hi: rgba(0, 0, 0, 0.25);
+    --glass-rim-lo: rgba(0, 0, 0, 0.15);
+    --ios-separator: rgba(60, 60, 67, 0.6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass {
+    --glass-scale: 1 !important;
+  }
+}
