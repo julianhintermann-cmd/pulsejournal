@@ -1,0 +1,13 @@
+services:
+  pulse-journal:
+    image: ghcr.io/<OWNER>/pulse-journal:latest
+    container_name: pulse-journal
+    restart: unless-stopped
+    ports:
+      - "3080:3000"
+    environment:
+      - TZ=Europe/Zurich
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./data:/data
