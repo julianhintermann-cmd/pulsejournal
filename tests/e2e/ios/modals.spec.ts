@@ -21,6 +21,8 @@ test("a dirty trade form asks before it is discarded", async ({ page }) => {
   // A plain field: the symbol combobox closes its suggestions on blur, i.e. during the tap on ✕, and mobile WebKit
   // drops a tap that changes visible content (covered by the manual iPhone checklist instead).
   await page.fill("#entryPrice", "20000");
+  // Leave the field first: mobile WebKit in Playwright sometimes spends the next tap on ending the edit (focus).
+  await page.locator("#entryPrice").blur();
   await tap(page, page.getByRole("button", { name: "Abbrechen" }).filter({ visible: true }).first());
   const sheet = page.getByRole("alertdialog");
   await expect(sheet).toBeVisible();
