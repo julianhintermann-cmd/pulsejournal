@@ -29,16 +29,18 @@ function toValues(item: InstrumentItem | null, baseCurrency: string): Instrument
   };
 }
 
-function InstrumentDialog({
+export function InstrumentDialog({
   open,
   onOpenChange,
   item,
   baseCurrency,
+  onSaved,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   item: InstrumentItem | null;
   baseCurrency: string;
+  onSaved?: (saved: { id: string; symbol: string; multiplier: number; quoteCurrency: string }) => void;
 }) {
   const [pending, startTransition] = useTransition();
   const form = useForm<InstrumentFormValues>({
@@ -68,6 +70,12 @@ function InstrumentDialog({
         return;
       }
       toast.success("Instrument gespeichert");
+      onSaved?.({
+        id: result.data.id,
+        symbol: values.symbol.trim().toUpperCase(),
+        multiplier: toNumber(values.multiplier) ?? 1,
+        quoteCurrency: values.quoteCurrency.trim().toUpperCase(),
+      });
       onOpenChange(false);
     });
   });

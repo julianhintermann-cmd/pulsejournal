@@ -294,6 +294,88 @@ export const tradeSchema = z
   });
 export type TradeInput = z.infer<typeof tradeSchema>;
 
+/** Client form schema of the trade form (raw strings; converted with buildTradePayload). */
+export const executionFormSchema = z.object({
+  side: z.enum(SIDES),
+  qty: z.string(),
+  price: z.string(),
+  fee: z.string(),
+  executedAt: z.string(),
+});
+export type ExecutionFormValues = z.infer<typeof executionFormSchema>;
+
+export const tradeFormSchema = z
+  .object({
+    mode: z.enum(["quick", "detailed"]),
+    accountId: z.string().min(1, "Bitte ein Konto wählen."),
+    symbol: z
+      .string()
+      .trim()
+      .min(1, "Bitte ein Symbol eingeben.")
+      .max(30)
+      .regex(/^[A-Za-z0-9._/!:-]+$/, "Nur Buchstaben, Zahlen und . _ / - : erlaubt."),
+    direction: z.enum(DIRECTIONS),
+    playbookId: z.string(),
+    timeframe: z.string(),
+    entryPrice: z.string(),
+    entryAt: z.string(),
+    exitPrice: z.string(),
+    exitAt: z.string(),
+    qty: z.string(),
+    executions: z.array(executionFormSchema),
+    initialStop: numericString({ optional: true, positive: true }),
+    initialTarget: numericString({ optional: true, positive: true }),
+    pnlMode: z.enum(PNL_MODES),
+    manualNetPnl: z.string(),
+    fxRate: numericString({ positive: true }),
+    fees: numericString({ optional: true, nonNegative: true }),
+    swap: numericString({ optional: true }),
+    executionRating: z.number().int().min(1).max(5).nullable(),
+    confidence: z.number().int().min(1).max(5).nullable(),
+    emotionBefore: z.string().nullable(),
+    emotionAfter: z.string().nullable(),
+    mistakeIds: z.array(z.string()),
+    tagNames: z.array(z.string()),
+    ruleChecks: z.record(z.string(), z.boolean()),
+    notes: z.string(),
+    tradingviewUrl: z.string(),
+  })
+  .superRefine((v, ctx) => {
+    const num = (
+      raw: string,
+      path: (string | number)[],
+      opts: { optional?: boolean; positive?: boolean; nonNegative?: boolean },
+    ) => {
+      const value = parseDecimal(raw);
+      if (value == null) {
+        if (!opts.optional) ctx.addIssue({ code: "custom", path, message: MSG.required });
+      } else if (Number.isNaN(value)) ctx.addIssue({ code: "custom", path, message: MSG.number });
+      else if (opts.positive && value <= 0) ctx.addIssue({ code: "custom", path, message: MSG.positive });
+      else if (opts.nonNegative && value < 0) ctx.addIssue({ code: "custom", path, message: MSG.nonNegative });
+    };
+    if (v.mode === "quick") {
+      num(v.entryPrice, ["entryPrice"], { positive: true });
+      num(v.qty, ["qty"], { positive: true });
+      if (!v.entryAt) ctx.addIssue({ code: "custom", path: ["entryAt"], message: MSG.date });
+      num(v.exitPrice, ["exitPrice"], { optional: true, positive: true });
+      if (v.exitPrice.trim() && !v.exitAt) ctx.addIssue({ code: "custom", path: ["exitAt"], message: MSG.date });
+    } else {
+      v.executions.forEach((e, i) => {
+        num(e.qty, ["executions", i, "qty"], { positive: true });
+        num(e.price, ["executions", i, "price"], { positive: true });
+        num(e.fee, ["executions", i, "fee"], { optional: true, nonNegative: true });
+        if (!e.executedAt) ctx.addIssue({ code: "custom", path: ["executions", i, "executedAt"], message: MSG.date });
+      });
+      const opening = v.executions.filter((e) => (v.direction === "long" ? e.side === "buy" : e.side === "sell"));
+      if (opening.length === 0) ctx.addIssue({ code: "custom", path: ["executions"], message: MSG.executions });
+    }
+    if (v.pnlMode === "manual") num(v.manualNetPnl, ["manualNetPnl"], {});
+    if (v.tradingviewUrl.trim() && !/^https?:\/\/\S+$/i.test(v.tradingviewUrl.trim())) {
+      ctx.addIssue({ code: "custom", path: ["tradingviewUrl"], message: MSG.url });
+    }
+  });
+export type TradeFormValues = z.infer<typeof tradeFormSchema>;
+
 export const bulkUpdateSchema = z.object({
   ids: z.array(z.string()).min(1).max(5000),
   addTagNames: z.array(listNameSchema).max(50).optional(),

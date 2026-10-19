@@ -1,20 +1,26 @@
-import { and, asc, desc, eq, isNull, like, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, isNull, like, lt, or, sql, type SQL } from "drizzle-orm";
 
 import { getDb } from "@/lib/db/client";
 import {
   accounts,
   cashTransactions,
   emotions,
+  executions,
   instruments,
   mistakes,
+  playbookRules,
+  playbooks,
+  screenshots,
   tags,
   tradeMistakes,
+  tradeRuleChecks,
   trades,
   tradeTags,
   type Account,
   type CashTransaction,
   type Instrument,
 } from "@/lib/db/schema";
+import type { ResolvedFilter } from "@/lib/filter";
 import { balanceCurve, cashDelta } from "@/lib/stats/metrics";
 
 export function listAccounts(opts: { includeArchived?: boolean } = {}) {
@@ -189,4 +195,163 @@ export function listInstruments(): InstrumentItem[] {
     .groupBy(instruments.id)
     .orderBy(asc(instruments.symbol))
     .all();
+}
+
+// ---------- Trade form ----------
+
+export type FormInstrument = { id: string; symbol: string; multiplier: number; quoteCurrency: string };
+export type FormPlaybook = { id: string; name: string; color: string; rules: { id: string; text: string }[] };
+
+export function listPlaybooksWithRules(opts: { includeArchived?: boolean } = {}): FormPlaybook[] {
+  const db = getDb();
+  const rows = db
+    .select()
+    .from(playbooks)
+    .where(opts.includeArchived ? undefined : eq(playbooks.archived, false))
+    .orderBy(asc(playbooks.name))
+    .all();
+  const rules = db.select().from(playbookRules).orderBy(asc(playbookRules.position)).all();
+  return rows.map((p) => ({
+    id: p.id,
+    name: p.name,
+    color: p.color,
+    rules: rules.filter((r) => r.playbookId === p.id).map((r) => ({ id: r.id, text: r.text })),
+  }));
+}
+
+export function tradeFormData() {
+  const db = getDb();
+  const instrumentRows = db
+    .select({
+      id: instruments.id,
+      symbol: instruments.symbol,
+      multiplier: instruments.multiplier,
+      quoteCurrency: instruments.quoteCurrency,
+    })
+    .from(instruments)
+    .orderBy(asc(instruments.symbol))
+    .all();
+  const recent = db
+    .select({ symbol: instruments.symbol, last: sql<number>`max(${trades.openedAt})` })
+    .from(trades)
+    .innerJoin(instruments, eq(instruments.id, trades.instrumentId))
+    .groupBy(instruments.id)
+    .orderBy(desc(sql`max(${trades.openedAt})`))
+    .limit(12)
+    .all()
+    .map((r) => r.symbol);
+  const accountRows = listAccounts().map((a) => ({
+    id: a.id,
+    name: a.name,
+    currency: a.currency,
+    balance: accountBalance(a.id) ?? a.startingBalance,
+  }));
+  return {
+    accounts: accountRows,
+    instruments: instrumentRows as FormInstrument[],
+    recentSymbols: recent,
+    playbooks: listPlaybooksWithRules(),
+    emotions: db.select({ id: emotions.id, name: emotions.name }).from(emotions).orderBy(asc(emotions.position)).all(),
+    mistakes: db.select({ id: mistakes.id, name: mistakes.name }).from(mistakes).orderBy(asc(mistakes.position)).all(),
+    tags: db.select({ id: tags.id, name: tags.name, color: tags.color }).from(tags).orderBy(asc(tags.name)).all(),
+  };
+}
+export type TradeFormData = ReturnType<typeof tradeFormData>;
+
+export type TradeDetail = NonNullable<ReturnType<typeof getTradeDetail>>;
+
+/** Everything needed by the detail and edit pages. */
+export function getTradeDetail(id: string) {
+  const db = getDb();
+  const row = db
+    .select({ trade: trades, instrument: instruments, account: accounts })
+    .from(trades)
+    .innerJoin(instruments, eq(instruments.id, trades.instrumentId))
+    .innerJoin(accounts, eq(accounts.id, trades.accountId))
+    .where(and(eq(trades.id, id), isNull(trades.deletedAt)))
+    .get();
+  if (!row) return null;
+  const playbook = row.trade.playbookId
+    ? (db.select().from(playbooks).where(eq(playbooks.id, row.trade.playbookId)).get() ?? null)
+    : null;
+  const rules = playbook
+    ? db
+        .select()
+        .from(playbookRules)
+        .where(eq(playbookRules.playbookId, playbook.id))
+        .orderBy(asc(playbookRules.position))
+        .all()
+    : [];
+  const checks = db.select().from(tradeRuleChecks).where(eq(tradeRuleChecks.tradeId, id)).all();
+  return {
+    ...row,
+    playbook,
+    rules: rules.map((r) => ({ id: r.id, text: r.text, checked: checks.some((c) => c.ruleId === r.id && c.checked) })),
+    executions: db
+      .select()
+      .from(executions)
+      .where(eq(executions.tradeId, id))
+      .orderBy(asc(executions.executedAt))
+      .all(),
+    tags: db
+      .select({ id: tags.id, name: tags.name, color: tags.color })
+      .from(tradeTags)
+      .innerJoin(tags, eq(tags.id, tradeTags.tagId))
+      .where(eq(tradeTags.tradeId, id))
+      .orderBy(asc(tags.name))
+      .all(),
+    mistakes: db
+      .select({ id: mistakes.id, name: mistakes.name })
+      .from(tradeMistakes)
+      .innerJoin(mistakes, eq(mistakes.id, tradeMistakes.mistakeId))
+      .where(eq(tradeMistakes.tradeId, id))
+      .orderBy(asc(mistakes.position))
+      .all(),
+    screenshots: db
+      .select()
+      .from(screenshots)
+      .where(eq(screenshots.tradeId, id))
+      .orderBy(asc(screenshots.position))
+      .all(),
+  };
+}
+
+// ---------- Filters ----------
+
+/** SQL conditions for the global filter. `field` decides which timestamp the period applies to. */
+export function filterConditions(
+  filter: Pick<ResolvedFilter, "start" | "end" | "accountId">,
+  field: "openedAt" | "closedAt" = "openedAt",
+) {
+  const column = field === "openedAt" ? trades.openedAt : trades.closedAt;
+  const conditions: SQL[] = [isNull(trades.deletedAt)];
+  if (filter.accountId) conditions.push(eq(trades.accountId, filter.accountId));
+  if (filter.start != null) conditions.push(gte(column, filter.start));
+  if (filter.end != null) conditions.push(lt(column, filter.end));
+  return conditions;
+}
+
+/** Previous / next trade (by opened_at) within the current filter. */
+export function adjacentTrades(
+  id: string,
+  openedAt: number,
+  filter: Pick<ResolvedFilter, "start" | "end" | "accountId">,
+) {
+  const db = getDb();
+  const base = filterConditions(filter, "openedAt");
+  const prev = db
+    .select({ id: trades.id })
+    .from(trades)
+    .where(and(...base, or(lt(trades.openedAt, openedAt), and(eq(trades.openedAt, openedAt), lt(trades.id, id)))))
+    .orderBy(desc(trades.openedAt), desc(trades.id))
+    .limit(1)
+    .get();
+  const next = db
+    .select({ id: trades.id })
+    .from(trades)
+    .where(and(...base, or(gt(trades.openedAt, openedAt), and(eq(trades.openedAt, openedAt), gt(trades.id, id)))))
+    .orderBy(asc(trades.openedAt), asc(trades.id))
+    .limit(1)
+    .get();
+  return { prevId: prev?.id ?? null, nextId: next?.id ?? null };
 }

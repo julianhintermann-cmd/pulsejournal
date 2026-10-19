@@ -35,15 +35,15 @@ export function formatNumber(value: number | null | undefined, decimals = 2, opt
   return `${sign}${formatAbs(value, decimals)}`;
 }
 
-/** Formats a price/quantity with up to `maxDecimals` decimals and no trailing zeros (min 0). */
-export function formatDecimal(value: number | null | undefined, maxDecimals = 5) {
+/** Formats a price/quantity with up to `maxDecimals` decimals, trimming trailing zeros down to `minDecimals`. */
+export function formatDecimal(value: number | null | undefined, maxDecimals = 5, minDecimals = 0) {
   if (value == null || !Number.isFinite(value)) return "–";
-  const fixed = Math.abs(value)
-    .toFixed(maxDecimals)
-    .replace(/\.?0+$/, "");
-  const [int, frac] = fixed.split(".");
+  const [int, rawFrac = ""] = Math.abs(value).toFixed(maxDecimals).split(".");
+  let frac = rawFrac.replace(/0+$/, "");
+  if (frac.length < minDecimals) frac = frac.padEnd(minDecimals, "0");
   const body = frac ? `${groupDigits(int)}.${frac}` : groupDigits(int);
-  return value < 0 && Number(fixed) !== 0 ? `${MINUS}${body}` : body;
+  const isZero = Number(`${int}.${frac || "0"}`) === 0;
+  return value < 0 && !isZero ? `${MINUS}${body}` : body;
 }
 
 /** `CHF 1’234.56`, negative `−CHF 120.00`; with `signed` positive values get a `+` prefix. */
@@ -58,6 +58,11 @@ export function formatMoney(
   const positive = !negative && Number(Math.abs(value).toFixed(decimals)) !== 0;
   const sign = negative ? MINUS : opts.signed && positive ? "+" : "";
   return `${sign}${currency}${NBSP}${formatAbs(value, decimals)}`;
+}
+
+/** Prices: up to 5 decimals, at least 2. */
+export function formatPrice(value: number | null | undefined) {
+  return formatDecimal(value, 5, 2);
 }
 
 /** Compact money for chart axes: `CHF 1.2k`. */

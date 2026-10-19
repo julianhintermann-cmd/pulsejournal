@@ -1,5 +1,6 @@
 import { runMigrations } from "@/lib/db/migrate";
 import { log } from "@/lib/log";
+import { purgeDeletedTrades } from "@/lib/trades/save";
 
 const globalForStart = globalThis as unknown as { __pulseStarted?: boolean };
 
@@ -13,4 +14,6 @@ export async function startServer() {
     log.error("Database migration failed", error);
     throw error;
   }
+  // Trades soft-deleted right before a restart are past their undo window now.
+  await purgeDeletedTrades().catch((error) => log.error("Purging deleted trades failed", error));
 }
