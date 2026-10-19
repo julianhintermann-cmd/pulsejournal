@@ -27,7 +27,7 @@ export type IosSheetProps = {
   confirm?: SheetConfirm;
   /** Asks "Änderungen verwerfen?" before closing by swipe or ✕. */
   dirty?: boolean;
-  /** Open directly at the large detent (forms with a lot of content). */
+  /** Starting detent; defaults to large for forms (with a footer) and medium otherwise. */
   initialDetent?: "medium" | "large";
 };
 
@@ -86,9 +86,11 @@ function SheetPanel({
   footer,
   hideHeader,
   confirm,
-  initialDetent = "medium",
+  initialDetent,
   requestClose,
 }: IosSheetProps & { requestClose: () => void }) {
+  // Forms (with a footer) open at the large detent like iOS edit sheets; pickers and lists at medium.
+  const startDetent = initialDetent ?? (footer ? "large" : "medium");
   const grabRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const footerRef = useRef<HTMLDivElement>(null);
@@ -99,12 +101,16 @@ function SheetPanel({
   const [detent, setDetent] = useState<number | null>(null);
   // The Radix portal mounts its children one render later, so measuring starts once the card exists.
   const [card, setCard] = useState<HTMLDivElement | null>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  /** While dragging, the sheet is laid out at the top detent and moved with `y`; at rest it has the detent height. */
+  const [expanded, setExpanded] = useState(false);
   const y = useMotionValue(1200);
 
   const { top, stops } = computeDetents((viewport || 800) - keyboard, natural || 320);
-  const current = detent ?? (initialDetent === "large" ? stops.length - 1 : 0);
+  const current = detent ?? (startDetent === "large" ? stops.length - 1 : 0);
   const index = Math.min(current, stops.length - 1);
   const isLarge = stops.length > 1 && index === stops.length - 1;
+  // Offsets are relative to the drag layout (sheet laid out at the top detent).
   const offsetFor = useCallback((i: number) => top - stops[Math.max(0, Math.min(i, stops.length - 1))], [top, stops]);
 
   // Measure the free viewport height and the natural height of header + content + footer.
@@ -128,13 +134,31 @@ function SheetPanel({
     };
   }, [card]);
 
-  // Spring to the current detent whenever it or the size changes (also the entrance).
+  const restHeight = stops[index];
+  const height = expanded ? top : restHeight;
+
+  // Entrance: spring up from below once the size is known.
   const measured = viewport > 0 && natural > 0;
+  const entered = useRef(false);
   useEffect(() => {
-    if (!measured) return;
-    const controls = animate(y, offsetFor(index), SPRING);
+    if (!measured || entered.current) return;
+    entered.current = true;
+    y.set(restHeight + 60);
+    const controls = animate(y, 0, SPRING);
     return () => controls.stop();
-  }, [measured, index, offsetFor, y]);
+  }, [measured, restHeight, y]);
+
+  /** Switch between rest layout (detent height, y = 0) and drag layout (top detent, y = offset) without a jump. */
+  const setLayout = (toExpanded: boolean, restIndex = index) => {
+    const el = sheetRef.current;
+    const nextY = toExpanded ? y.get() + (top - stops[restIndex]) : 0;
+    if (el) {
+      el.style.height = `${toExpanded ? top : stops[restIndex]}px`;
+      el.style.transform = `translateY(${nextY}px)`;
+    }
+    y.set(nextY);
+    setExpanded(toExpanded);
+  };
 
   // Card-stack effect behind a large sheet; tab bar and nav bar step back.
   useEffect(() => {
@@ -162,6 +186,7 @@ function SheetPanel({
   const begin = (event: React.PointerEvent, fromContent: boolean) => {
     if (event.button !== 0) return;
     if (!fromContent) (event.currentTarget as Element).setPointerCapture?.(event.pointerId);
+    if (!fromContent) setLayout(true);
     drag.current = {
       startY: event.clientY,
       startOffset: y.get(),
@@ -187,6 +212,8 @@ function SheetPanel({
       d.active = true;
       d.startY = event.clientY;
       (event.currentTarget as Element).setPointerCapture?.(event.pointerId);
+      setLayout(true);
+      d.startOffset = y.get();
       return;
     }
     let next = d.startOffset + (event.clientY - d.startY);
@@ -206,7 +233,8 @@ function SheetPanel({
     const projected = y.get() + velocity * 180;
     if (projected > offsetFor(0) + Math.min(140, stops[0] * 0.3) || velocity > 1.1) {
       haptic("light");
-      animate(y, offsetFor(index), SPRING);
+      // If closing is refused (dirty check), the sheet springs back to where it was.
+      void animate(y, offsetFor(index), SPRING).then(() => setLayout(false, index));
       requestClose();
       return;
     }
@@ -215,8 +243,10 @@ function SheetPanel({
       if (Math.abs(offsetFor(i) - projected) < Math.abs(offsetFor(best) - projected)) best = i;
     }
     if (best !== index) haptic("selection");
-    setDetent(best);
-    animate(y, offsetFor(best), SPRING);
+    void animate(y, offsetFor(best), SPRING).then(() => {
+      setLayout(false, best);
+      setDetent(best);
+    });
   };
 
   const floating = !isLarge;
@@ -243,9 +273,10 @@ function SheetPanel({
         }}
       >
         <motion.div
+          ref={sheetRef}
           className={cn("ios-sheet", floating ? "ios-sheet--floating" : "ios-sheet--attached")}
-          style={{ y, height: top, bottom: keyboard }}
-          exit={{ y: top + 60, transition: { type: "spring", stiffness: 380, damping: 40 } }}
+          style={{ y, height, bottom: keyboard }}
+          exit={{ y: height + 60, transition: { type: "spring", stiffness: 380, damping: 40 } }}
         >
           <div ref={setCard} className={cn("ios-sheet__card", floating && "glass")}>
             <div
