@@ -137,16 +137,17 @@ function SheetPanel({
   const restHeight = stops[index];
   const height = expanded ? top : restHeight;
 
-  // Entrance: spring up from below once the size is known.
+  // Entrance: spring up from below once the size is known; later size changes settle at rest (y = 0) again.
   const measured = viewport > 0 && natural > 0;
   const entered = useRef(false);
   useEffect(() => {
-    if (!measured || entered.current) return;
-    entered.current = true;
-    y.set(restHeight + 60);
-    const controls = animate(y, 0, SPRING);
-    return () => controls.stop();
-  }, [measured, restHeight, y]);
+    if (!measured || expanded) return;
+    if (!entered.current) {
+      entered.current = true;
+      y.set(restHeight + 60);
+    }
+    animate(y, 0, SPRING);
+  }, [measured, restHeight, expanded, y]);
 
   /** Switch between rest layout (detent height, y = 0) and drag layout (top detent, y = offset) without a jump. */
   const setLayout = (toExpanded: boolean, restIndex = index) => {
