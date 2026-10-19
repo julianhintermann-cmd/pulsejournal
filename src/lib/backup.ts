@@ -1,5 +1,5 @@
 import { createReadStream, createWriteStream, existsSync } from "node:fs";
-import { mkdir, mkdtemp, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readdir, readFile, rename, rm, rmdir, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -97,6 +97,7 @@ export async function writeBackupZip(target: string) {
 
     const root = uploadsRoot();
     for (const rel of await listFiles(root)) {
+      if (isRestoreFolder(rel)) continue;
       const entry = new ZipPassThrough(`uploads/${rel}`);
       zip.add(entry);
       await pipeFile(path.join(root, rel), entry);
@@ -167,12 +168,34 @@ async function extractZip(zipFile: string, targetDir: string) {
   await Promise.all(writes);
 }
 
+/** Prefixes of the transient folders a restore creates inside the uploads folder. */
+const RESTORE_STAGING = ".restore-";
+const RESTORE_PREVIOUS = ".before-restore-";
+
+function isRestoreFolder(name: string) {
+  return name.startsWith(RESTORE_STAGING) || name.startsWith(RESTORE_PREVIOUS);
+}
+
+/** Moves the entries of `from` into `to` (both on the same file system), skipping restore folders. */
+async function moveEntries(from: string, to: string) {
+  await mkdir(to, { recursive: true });
+  for (const name of await readdir(from)) {
+    if (isRestoreFolder(name)) continue;
+    await rename(path.join(from, name), path.join(to, name));
+  }
+}
+
 /**
  * Restores a backup zip: validates manifest and schema version, then swaps database and uploads
  * (old files are kept until the swap succeeded) and reopens the connection with migrations applied.
+ * The uploads folder itself is never renamed, only its contents, so it may be a separate mount (e.g. on another disk).
  */
 export async function restoreBackup(zipFile: string) {
   const work = await mkdtemp(path.join(env.dataDir, ".restore-"));
+  const uploads = uploadsRoot();
+  const stamp = Date.now();
+  const stagedUploads = path.join(uploads, `${RESTORE_STAGING}${stamp}`);
+  const oldUploads = path.join(uploads, `${RESTORE_PREVIOUS}${stamp}`);
   try {
     await extractZip(zipFile, work);
     let manifest: BackupManifest;
@@ -194,11 +217,13 @@ export async function restoreBackup(zipFile: string) {
     if (!existsSync(restoredDb) || (await stat(restoredDb)).size === 0)
       throw new RestoreError("journal.db fehlt im Backup.");
 
+    // Copy the restored uploads onto the uploads file system first, so the swap below only needs renames there.
+    await mkdir(stagedUploads, { recursive: true });
+    const restoredUploads = path.join(work, "uploads");
+    if (existsSync(restoredUploads)) await cp(restoredUploads, stagedUploads, { recursive: true });
+
     const dbFile = databaseFile();
-    const uploads = uploadsRoot();
-    const stamp = Date.now();
     const oldDb = `${dbFile}.before-restore-${stamp}`;
-    const oldUploads = `${uploads}.before-restore-${stamp}`;
 
     try {
       getSqlite().pragma("wal_checkpoint(TRUNCATE)");
@@ -210,24 +235,26 @@ export async function restoreBackup(zipFile: string) {
     await rm(`${dbFile}-shm`, { force: true });
 
     const hadDb = existsSync(dbFile);
-    const hadUploads = existsSync(uploads);
+    let oldUploadsMoved = false;
     try {
       if (hadDb) await rename(dbFile, oldDb);
-      if (hadUploads) await rename(uploads, oldUploads);
+      await moveEntries(uploads, oldUploads);
+      oldUploadsMoved = true;
       await rename(restoredDb, dbFile);
-      const restoredUploads = path.join(work, "uploads");
-      if (existsSync(restoredUploads)) await rename(restoredUploads, uploads);
-      else await mkdir(uploads, { recursive: true });
+      await moveEntries(stagedUploads, uploads);
       runMigrations();
     } catch (error) {
       // Roll back to the previous state.
       closeDb();
       await rm(dbFile, { force: true });
       if (hadDb) await rename(oldDb, dbFile);
-      if (hadUploads) {
-        await rm(uploads, { recursive: true, force: true });
-        await rename(oldUploads, uploads);
+      // Entries left in the uploads folder are restored files only once all old files were moved away.
+      if (oldUploadsMoved) {
+        for (const name of await readdir(uploads)) {
+          if (!isRestoreFolder(name)) await rm(path.join(uploads, name), { recursive: true, force: true });
+        }
       }
+      if (existsSync(oldUploads)) await moveEntries(oldUploads, uploads);
       runMigrations();
       throw error;
     }
@@ -237,6 +264,9 @@ export async function restoreBackup(zipFile: string) {
     return manifest;
   } finally {
     await rm(work, { recursive: true, force: true });
+    await rm(stagedUploads, { recursive: true, force: true });
+    // Only an empty leftover is removed here; old files that could not be moved back are kept.
+    await rmdir(oldUploads).catch(() => undefined);
   }
 }
 

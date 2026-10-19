@@ -124,6 +124,16 @@ Data layout on the volume:
 /data/backups/pulse-backup-YYYY-MM-DD.zip
 ```
 
+`/data/uploads` and `/data/backups` may be separate bind mounts, e.g. to keep the database on an SSD and
+screenshots and backups on a larger HDD:
+
+```yaml
+volumes:
+  - /volume2/docker/pulse-journal/data:/data
+  - /volume1/data/pulse-journal/uploads:/data/uploads
+  - /volume1/data/pulse-journal/backups:/data/backups
+```
+
 ## Development
 
 Requirements: Node.js 24 and pnpm 10 (`corepack enable`).

@@ -82,6 +82,8 @@ Assumptions and choices made where the specification left room. Format: file pat
 - `src/app/api/export/trades.csv/route.ts` – The CSV export adds a "Währung" column next to "Netto P&L" and writes plain numbers with a decimal point.
 - `src/lib/backup.ts` – The backup schema version is the number of shipped migrations; a backup from a newer schema is rejected.
 - `src/lib/backup.ts` – Retention counts only automatic daily files (`pulse-backup-YYYY-MM-DD.zip`); manual downloads are not stored on the server.
+- `src/lib/backup.ts` – A restore swaps the contents of the uploads folder instead of renaming the folder, so `/data/uploads` can be a separate mount on another disk.
+- `docker/entrypoint.sh` – Ownership is checked separately for `/data`, `/data/uploads` and `/data/backups`, because the latter two may be separate mounts.
 - `src/app/api/import/backup/route.ts` – After a restore all sessions are deleted, so every device has to log in again.
 
 ## Delivery
