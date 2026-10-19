@@ -1,12 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { FormField } from "@/components/form-field";
+import { Spinner } from "@/components/spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -105,7 +105,7 @@ export function GeneralSettings({
       </div>
       <div className="flex justify-end">
         <Button type="submit" disabled={pending || !isDirty}>
-          {pending ? <Loader2 className="animate-spin" /> : null}
+          {pending ? <Spinner /> : null}
           Speichern
         </Button>
       </div>

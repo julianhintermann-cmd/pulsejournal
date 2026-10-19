@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { GripVertical, Loader2, Plus, Trash2 } from "lucide-react";
+import { GripVertical, Plus, Trash2 } from "lucide-react";
 import { Reorder, useDragControls } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
@@ -12,6 +12,7 @@ import { ColorPicker } from "@/components/color-picker";
 import { FormField } from "@/components/form-field";
 import { MarkdownEditor } from "@/components/markdown-editor";
 import { ResponsiveDialog } from "@/components/responsive-dialog";
+import { Spinner } from "@/components/spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PALETTE, playbookFormSchema, type PlaybookFormValues } from "@/lib/validation";
@@ -133,7 +134,7 @@ export function PlaybookFormDialog({
             Abbrechen
           </Button>
           <Button onClick={onSubmit} disabled={pending}>
-            {pending ? <Loader2 className="animate-spin" /> : null}
+            {pending ? <Spinner /> : null}
             Speichern
           </Button>
         </>

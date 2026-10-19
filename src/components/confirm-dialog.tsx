@@ -1,10 +1,10 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
 import { ActionSheet, IosAlert } from "@/components/ios/action-sheet";
 import { ResponsiveDialog } from "@/components/responsive-dialog";
+import { Spinner } from "@/components/spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -109,7 +109,7 @@ export function ConfirmDialog({
             disabled={blocked || pending}
             autoFocus={!confirmText}
           >
-            {pending ? <Loader2 className="animate-spin" /> : null}
+            {pending ? <Spinner /> : null}
             {confirmLabel}
           </Button>
         </>

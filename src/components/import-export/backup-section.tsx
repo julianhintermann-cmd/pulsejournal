@@ -1,11 +1,12 @@
 "use client";
 
-import { ArchiveRestore, Download, FileArchive, Loader2 } from "lucide-react";
+import { ArchiveRestore, Download, FileArchive } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { Spinner } from "@/components/spinner";
 import { Button } from "@/components/ui/button";
 
 export function BackupDownload() {
@@ -70,7 +71,7 @@ export function BackupRestore() {
         }}
       />
       <Button variant="destructive" className="w-fit" disabled={!file || pending} onClick={() => setOpen(true)}>
-        {pending ? <Loader2 className="animate-spin" /> : <ArchiveRestore />}
+        {pending ? <Spinner /> : <ArchiveRestore />}
         Backup wiederherstellen
       </Button>
       <ConfirmDialog

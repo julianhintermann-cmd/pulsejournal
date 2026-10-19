@@ -1,7 +1,7 @@
 "use client";
 
 import type { RowSelectionState } from "@tanstack/react-table";
-import { CandlestickChart, Filter, Loader2, Plus, Search, Tag, Trash2, X, BookMarked } from "lucide-react";
+import { CandlestickChart, Filter, Plus, Search, Tag, Trash2, X, BookMarked } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
@@ -15,8 +15,10 @@ import { FOCUS_SEARCH_EVENT } from "@/components/keyboard-shortcuts";
 import { PnlValue } from "@/components/pnl-value";
 import { ResponsiveDialog } from "@/components/responsive-dialog";
 import { RValue } from "@/components/r-value";
+import { Spinner } from "@/components/spinner";
 import { TagInput } from "@/components/tag-input";
 import { TradeCard } from "@/components/trades/trade-card";
+import { TradeListRow } from "@/components/trades/trade-list-row";
 import { TradesTable } from "@/components/trades/trades-table";
 import { Button } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -441,7 +443,32 @@ export function TradesView({ rows, options, compact }: { rows: TradeRow[]; optio
           <div className="hidden lg:block">
             <TradesTable rows={filtered} compact={compact} selection={selection} onSelectionChange={setSelection} />
           </div>
-          <div className="flex flex-col gap-3 lg:hidden">
+          {/* Phones: iOS list with sticky day headers, swipe actions and long-press menus. */}
+          <div className="flex flex-col gap-4 md:hidden">
+            {groups.map(([day, list]) => {
+              const sums = sumByCurrency(list);
+              return (
+                <section key={day} className="ios-day-group">
+                  <header className="ios-day-header">
+                    <h2 className="text-[15px] font-semibold">{formatDayKey(day, "EEEE, d. MMMM")}</h2>
+                    <span className="flex gap-2 text-[15px] font-semibold">
+                      {sums.map(([currency, value]) => (
+                        <PnlValue key={currency} value={value} currency={currency} />
+                      ))}
+                    </span>
+                  </header>
+                  <ul className="ios-group">
+                    {list.map((trade) => (
+                      <li key={trade.id}>
+                        <TradeListRow trade={trade} timeZone={timeZone} />
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              );
+            })}
+          </div>
+          <div className="hidden flex-col gap-3 md:flex lg:hidden">
             {groups.map(([day, list]) => {
               const sums = sumByCurrency(list);
               return (
@@ -488,7 +515,7 @@ export function TradesView({ rows, options, compact }: { rows: TradeRow[]; optio
               Abbrechen
             </Button>
             <Button onClick={runBulk} disabled={pending || bulkTags.length === 0}>
-              {pending ? <Loader2 className="animate-spin" /> : null}
+              {pending ? <Spinner /> : null}
               Hinzufügen
             </Button>
           </>
@@ -507,7 +534,7 @@ export function TradesView({ rows, options, compact }: { rows: TradeRow[]; optio
               Abbrechen
             </Button>
             <Button onClick={runBulk} disabled={pending}>
-              {pending ? <Loader2 className="animate-spin" /> : null}
+              {pending ? <Spinner /> : null}
               Zuweisen
             </Button>
           </>

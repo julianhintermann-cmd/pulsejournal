@@ -1168,3 +1168,146 @@
     pointer-events: none;
   }
 }
+
+/* ---------- Inset-grouped lists, rows, swipe actions, pull to refresh (section 6) ---------- */
+.ios-section__header {
+  margin: 0 16px 7px;
+  font-size: var(--ios-footnote, 13px);
+  font-weight: 600;
+  color: var(--ios-label-2, var(--text-muted));
+}
+.ios-section__footer {
+  margin: 7px 16px 0;
+  font-size: var(--ios-footnote, 13px);
+  color: var(--ios-label-2, var(--text-muted));
+}
+.ios-group {
+  overflow: hidden;
+  border-radius: 26px;
+  background: var(--ios-cell, var(--surface));
+}
+.ios-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 44px;
+  padding-left: 16px;
+  font-size: var(--ios-body, 17px);
+  color: var(--text);
+  transition: background-color 200ms var(--ease-ios);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.ios-row--interactive:active {
+  background-color: var(--ios-fill);
+  transition: none;
+}
+.ios-row__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px; /* concentric-looking squircle at this size */
+}
+.ios-row__body {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 11px 16px 11px 0;
+}
+/* Separator from the text edge to the trailing edge, like Settings. */
+li + li > .ios-row .ios-row__body,
+li + li > .ios-swipe .ios-row__body {
+  box-shadow: inset 0 0.5px 0 var(--ios-separator);
+}
+.ios-row__value {
+  flex-shrink: 0;
+  color: var(--ios-label-2, var(--text-muted));
+  font-variant-numeric: tabular-nums;
+}
+
+.ios-swipe {
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+.ios-swipe__content {
+  position: relative;
+  z-index: 1;
+  background: var(--ios-cell, var(--surface));
+  will-change: transform;
+}
+.ios-swipe__actions {
+  position: absolute;
+  inset-block: 0;
+  display: flex;
+}
+.ios-swipe__actions--trailing {
+  right: 0;
+  flex-direction: row;
+}
+.ios-swipe__actions--leading {
+  left: 0;
+}
+.ios-swipe__action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 74px;
+  padding: 0 14px;
+  color: #fff;
+  font-size: var(--ios-subheadline, 15px);
+  font-weight: 500;
+  transition: flex-grow 200ms var(--ease-ios);
+}
+
+.ios-ptr {
+  position: fixed;
+  z-index: 0;
+  top: calc(var(--sat) + 60px);
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  margin-left: -14px;
+  color: var(--ios-label-2, var(--text-muted));
+  pointer-events: none;
+  opacity: 0;
+}
+.ios-ptr[data-refreshing] {
+  opacity: 1;
+}
+
+@media (max-width: 767px) {
+  /* Skeletons become iOS redacted placeholders: flat fill with a slow pulse, no shimmer. */
+  [data-slot="skeleton"] {
+    background: var(--ios-fill);
+    animation: ios-redacted-pulse 1.5s ease-in-out infinite;
+  }
+  /* Long lists: skip rendering of off-screen day groups. */
+  .ios-day-group {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 240px;
+  }
+}
+.ios-day-header {
+  position: sticky;
+  z-index: 5;
+  top: calc(var(--sat) + 52px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 -4px 6px;
+  padding: 6px 20px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+}

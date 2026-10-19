@@ -1,12 +1,13 @@
 "use client";
 
-import { Check, CircleAlert, FileSpreadsheet, Info, Loader2, Trash2, Upload } from "lucide-react";
+import { Check, CircleAlert, FileSpreadsheet, Info, Trash2, Upload } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { useApp } from "@/components/app-context";
 import { FormField } from "@/components/form-field";
+import { Spinner } from "@/components/spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -525,7 +526,7 @@ export function CsvImportWizard({
                   Zurück
                 </Button>
                 <Button onClick={runImport} disabled={pending || !accountId}>
-                  {pending ? <Loader2 className="animate-spin" /> : <Upload />}
+                  {pending ? <Spinner /> : <Upload />}
                   {plural(valid, "Trade", "Trades")} importieren
                 </Button>
               </div>

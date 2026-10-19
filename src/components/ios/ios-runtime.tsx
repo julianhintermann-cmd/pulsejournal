@@ -38,6 +38,10 @@ export function IosRuntime() {
     document.addEventListener("gesturestart", preventZoom, { passive: false });
     document.addEventListener("gesturechange", preventZoom, { passive: false });
 
+    // iOS Safari only applies :active press states when the document has a touch listener.
+    const noop = () => undefined;
+    document.addEventListener("touchstart", noop, { passive: true });
+
     const onStorage = (event: StorageEvent) => {
       if (event.key === REDUCE_TRANSPARENCY_KEY) applyReducedTransparency();
     };
@@ -63,6 +67,7 @@ export function IosRuntime() {
       document.removeEventListener("gesturestart", preventZoom);
       document.removeEventListener("gesturechange", preventZoom);
       window.removeEventListener("storage", onStorage);
+      document.removeEventListener("touchstart", noop);
       window.visualViewport?.removeEventListener("resize", keepVisible);
       document.removeEventListener("focusin", keepVisible);
       window.clearTimeout(timer);

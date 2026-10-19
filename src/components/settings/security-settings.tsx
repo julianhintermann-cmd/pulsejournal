@@ -1,13 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { FormField } from "@/components/form-field";
+import { Spinner } from "@/components/spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { changePasswordSchema, type ChangePasswordInput } from "@/lib/validation";
@@ -76,7 +76,7 @@ export function SecuritySettings({ otherSessions }: { otherSessions: number }) {
         </div>
         <div className="flex justify-end">
           <Button type="submit" disabled={pending}>
-            {pending ? <Loader2 className="animate-spin" /> : null}
+            {pending ? <Spinner /> : null}
             Passwort ändern
           </Button>
         </div>

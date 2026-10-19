@@ -1,9 +1,9 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
+import { Spinner } from "@/components/spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DEFAULT_SESSIONS, isValidTime, SESSION_LABELS, type SessionsConfig } from "@/lib/sessions";
@@ -59,7 +59,7 @@ export function SessionsSettings({ initial }: { initial: SessionsConfig }) {
           Standard wiederherstellen
         </Button>
         <Button onClick={save} disabled={pending || invalid || !dirty}>
-          {pending ? <Loader2 className="animate-spin" /> : null}
+          {pending ? <Spinner /> : null}
           Speichern
         </Button>
       </div>

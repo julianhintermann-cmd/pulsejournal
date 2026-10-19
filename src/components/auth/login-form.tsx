@@ -1,11 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
 import { FormField } from "@/components/form-field";
+import { Spinner } from "@/components/spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { login } from "@/server/actions/auth";
@@ -61,7 +61,7 @@ export function LoginForm({ next }: { next: string | null }) {
         </p>
       ) : null}
       <Button type="submit" size="lg" disabled={pending} className="mt-1 w-full">
-        {pending ? <Loader2 className="animate-spin" /> : null}
+        {pending ? <Spinner /> : null}
         Anmelden
       </Button>
       <p className="text-center text-small text-muted-foreground">Du bleibst 30 Tage angemeldet.</p>

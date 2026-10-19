@@ -1,6 +1,8 @@
-import { Check, CircleAlert, Loader2 } from "lucide-react";
+import { Check, CircleAlert } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+
+import { Spinner } from "@/components/spinner";
 
 export type AutosaveState = "idle" | "pending" | "saving" | "saved" | "error";
 
@@ -20,7 +22,7 @@ export function AutosaveIndicator({ state, className }: { state: AutosaveState; 
         className,
       )}
     >
-      {state === "saving" ? <Loader2 className="size-3 animate-spin" /> : null}
+      {state === "saving" ? <Spinner className="size-3" /> : null}
       {state === "saved" ? <Check className="size-3" strokeWidth={3} /> : null}
       {state === "error" ? <CircleAlert className="size-3" /> : null}
       {state === "pending"

@@ -115,6 +115,28 @@ Notes for the iOS 26 style mobile layer (viewports below 768 px). The audit and 
   square with a drawn ✓ for ~1 s after saving a trade.
 - `ActivityIndicator`: iOS 8-spoke spinner; `Redacted` placeholder with a 1.5 s opacity pulse.
 
+### M6 – Lists and gestures
+
+- `src/components/ios/list.tsx`: `InsetGroupedList`, `ListSection` (header, 26 px rounded group, footer),
+  `ListRow` (≥ 44 px, leading Settings icon `ListIcon`, value, accessory, chevron in tertiary label, separators
+  inset to the text). Press feedback: `ios-fill` on touch-down, fades out 200 ms after release (a document touch
+  listener enables `:active` on iOS).
+- Mehr: Settings-style list with white glyphs in coloured squares (Kalender red, Statistiken blue, Playbooks orange,
+  Konten green, Import/Export and Einstellungen gray) and a red "Abmelden" row.
+- `SwipeableRow` (`src/components/ios/swipeable-row.tsx`): row follows the finger 1:1, axis lock after 10 px,
+  buttons grow with the swipe, springs on release, one open row at a time, tap elsewhere closes, a full swipe past
+  60 % fires the first action with a haptic. Trades: left → Löschen (red, full swipe deletes with the undo banner) +
+  Bearbeiten (accent), right → Duplizieren.
+- Trades list on phones (`trade-list-row.tsx`): sticky day headers with the day P&L, inset-grouped rows (symbol +
+  direction, net P&L + R in secondary label, setup · session · time, 40 px thumbnail), long-press context menu
+  (Bearbeiten, Duplizieren, Teilen via Web Share API with a text summary, Löschen). Day groups use
+  `content-visibility: auto`. Tablet keeps the cards, desktop the table.
+- `PullToRefresh` on Übersicht, Trades, Journal and Kalender: iOS activity indicator behind the large title, haptic
+  at 80 px, `router.refresh()` in a transition, content held down until it finished (≥ 600 ms). Uses the native
+  rubber band on iPhone (negative `scrollY`), a JS rubber band elsewhere; horizontal gestures are ignored.
+- Every web spinner (`Loader2`) is a `Spinner`: the iOS activity indicator on phones, unchanged elsewhere. Skeletons
+  become redacted placeholders (flat fill, 1.5 s opacity pulse) on phones.
+
 ## Deviations from the brief
 
 - Playwright WebKit could not be downloaded in the build sandbox (`cdn.playwright.dev` is blocked there). Local
@@ -124,5 +146,7 @@ Notes for the iOS 26 style mobile layer (viewports below 768 px). The audit and 
   No auth logic changed.
 - Floating vs. attached sheet: the 8 px side inset and radius switch with the detent (no animated width), the
   height change itself is a `transform` spring.
+- Swipe actions are `aria-hidden`; VoiceOver users reach the same actions through the long-press menu and the
+  detail screen.
 - Hover: Tailwind 4 already wraps every `hover:` utility in `@media (hover: hover)`, so no extra gating of existing
   components was needed.

@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { PullToRefresh } from "@/components/ios/feedback";
 import { LargeTitle, NavBar } from "@/components/ios/nav-bar";
 import { StackProbe, useStackNavigation } from "@/components/ios/stack";
 import { GlassTabBar } from "@/components/ios/tab-bar";
@@ -19,6 +20,9 @@ import { cn } from "@/lib/utils";
 const CommandMenu = dynamic(() => import("@/components/command-menu").then((m) => m.CommandMenu), { ssr: false });
 
 export const SIDEBAR_COOKIE = "pulse_sidebar";
+
+/** Phone screens with pull to refresh (section 6). */
+const PULL_TO_REFRESH = ["/", "/trades", "/journal", "/calendar"];
 
 export function AppShell({ initialCollapsed, children }: { initialCollapsed: boolean; children: React.ReactNode }) {
   const pathname = usePathname();
@@ -126,6 +130,7 @@ export function AppShell({ initialCollapsed, children }: { initialCollapsed: boo
           {pendingPath ? <RouteSkeleton pathname={pendingPath} /> : children}
         </main>
       </div>
+      {PULL_TO_REFRESH.includes(pathname) ? <PullToRefresh key={pathname} /> : null}
       <div aria-hidden="true" className="ios-edge-bottom md:hidden" />
       <GlassTabBar />
       {commandLoaded ? <CommandMenu open={commandOpen} onOpenChange={setCommandOpen} /> : null}

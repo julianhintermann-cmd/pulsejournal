@@ -1,9 +1,10 @@
 "use client";
 
-import { Database, ExternalLink, Loader2 } from "lucide-react";
+import { Database, ExternalLink } from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";
 
+import { Spinner } from "@/components/spinner";
 import { Button } from "@/components/ui/button";
 import { optimizeDatabase } from "@/server/actions/settings";
 
@@ -28,7 +29,7 @@ export function AboutSettings({ rows, repoUrl }: { rows: { label: string; value:
       </dl>
       <div className="flex flex-wrap gap-2">
         <Button variant="secondary" onClick={optimize} disabled={pending}>
-          {pending ? <Loader2 className="animate-spin" /> : <Database />}
+          {pending ? <Spinner /> : <Database />}
           Datenbank optimieren
         </Button>
         <Button variant="ghost" asChild>

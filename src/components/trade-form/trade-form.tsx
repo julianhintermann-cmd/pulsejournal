@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowDownRight, ArrowUpRight, Info, Loader2, Zap } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Info, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Controller, useForm, useWatch, type FieldPath } from "react-hook-form";
@@ -18,6 +18,7 @@ import { ResultChip } from "@/components/result-chip";
 import { RValue } from "@/components/r-value";
 import { filesToItems, ScreenshotUploader, type UploaderItem } from "@/components/screenshot-uploader";
 import { InstrumentDialog } from "@/components/settings/instruments-manager";
+import { Spinner } from "@/components/spinner";
 import { SymbolCombobox } from "@/components/symbol-combobox";
 import { TagInput } from "@/components/tag-input";
 import { ExecutionsEditor } from "@/components/trade-form/executions-editor";
@@ -885,7 +886,7 @@ export function TradeForm({
             Abbrechen
           </Button>
           <Button type="submit" disabled={pending} className="flex-1 sm:min-w-28 sm:flex-none">
-            {pending ? <Loader2 className="animate-spin" /> : null}
+            {pending ? <Spinner /> : null}
             Speichern
           </Button>
         </div>
