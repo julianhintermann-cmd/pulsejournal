@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, gte, isNull, like, lt, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, isNotNull, isNull, like, lt, or, sql, type SQL } from "drizzle-orm";
 
 import { getDb } from "@/lib/db/client";
 import {
@@ -354,4 +354,113 @@ export function adjacentTrades(
     .limit(1)
     .get();
   return { prevId: prev?.id ?? null, nextId: next?.id ?? null };
+}
+
+// ---------- Trades list ----------
+
+export type TradeRow = {
+  id: string;
+  accountId: string;
+  openedAt: number;
+  closedAt: number | null;
+  symbol: string;
+  direction: "long" | "short";
+  status: "open" | "closed";
+  playbook: { id: string; name: string; color: string } | null;
+  session: "asia" | "london" | "newyork" | "off";
+  entryAvg: number | null;
+  exitAvg: number | null;
+  qty: number;
+  rMultiple: number | null;
+  netPnl: number | null;
+  result: "win" | "loss" | "be" | "open";
+  currency: string;
+  tags: { id: string; name: string; color: string }[];
+  mistakeIds: string[];
+  thumb: string | null;
+  notes: string | null;
+};
+
+/** All trades matching the global filter (by opened_at), newest first, with tags and first thumbnail. */
+export function listTrades(filter: Pick<ResolvedFilter, "start" | "end" | "accountId">): TradeRow[] {
+  const db = getDb();
+  const rows = db
+    .select({
+      id: trades.id,
+      accountId: trades.accountId,
+      openedAt: trades.openedAt,
+      closedAt: trades.closedAt,
+      symbol: instruments.symbol,
+      direction: trades.direction,
+      status: trades.status,
+      playbookId: trades.playbookId,
+      playbookName: playbooks.name,
+      playbookColor: playbooks.color,
+      session: trades.session,
+      entryAvg: trades.entryAvg,
+      exitAvg: trades.exitAvg,
+      qty: trades.qtyOpened,
+      rMultiple: trades.rMultiple,
+      netPnl: trades.netPnl,
+      result: trades.result,
+      currency: accounts.currency,
+      notes: trades.notes,
+    })
+    .from(trades)
+    .innerJoin(instruments, eq(instruments.id, trades.instrumentId))
+    .innerJoin(accounts, eq(accounts.id, trades.accountId))
+    .leftJoin(playbooks, eq(playbooks.id, trades.playbookId))
+    .where(and(...filterConditions(filter, "openedAt")))
+    .orderBy(desc(trades.openedAt))
+    .all();
+  if (rows.length === 0) return [];
+
+  const tagRows = db
+    .select({ tradeId: tradeTags.tradeId, id: tags.id, name: tags.name, color: tags.color })
+    .from(tradeTags)
+    .innerJoin(tags, eq(tags.id, tradeTags.tagId))
+    .all();
+  const tagsByTrade = new Map<string, TradeRow["tags"]>();
+  for (const t of tagRows) {
+    const list = tagsByTrade.get(t.tradeId) ?? [];
+    list.push({ id: t.id, name: t.name, color: t.color });
+    tagsByTrade.set(t.tradeId, list);
+  }
+  const mistakeRows = db.select().from(tradeMistakes).all();
+  const mistakesByTrade = new Map<string, string[]>();
+  for (const m of mistakeRows) mistakesByTrade.set(m.tradeId, [...(mistakesByTrade.get(m.tradeId) ?? []), m.mistakeId]);
+  const thumbs = db
+    .select({ tradeId: screenshots.tradeId, thumbPath: screenshots.thumbPath, position: screenshots.position })
+    .from(screenshots)
+    .where(isNotNull(screenshots.tradeId))
+    .orderBy(asc(screenshots.position))
+    .all();
+  const thumbByTrade = new Map<string, string>();
+  for (const t of thumbs) if (t.tradeId && !thumbByTrade.has(t.tradeId)) thumbByTrade.set(t.tradeId, t.thumbPath);
+
+  return rows.map((r) => ({
+    id: r.id,
+    accountId: r.accountId,
+    openedAt: r.openedAt,
+    closedAt: r.closedAt,
+    symbol: r.symbol,
+    direction: r.direction,
+    status: r.status,
+    playbook:
+      r.playbookId && r.playbookName
+        ? { id: r.playbookId, name: r.playbookName, color: r.playbookColor ?? "#9AA3B5" }
+        : null,
+    session: r.session,
+    entryAvg: r.entryAvg,
+    exitAvg: r.exitAvg,
+    qty: r.qty,
+    rMultiple: r.rMultiple,
+    netPnl: r.netPnl,
+    result: r.result,
+    currency: r.currency,
+    notes: r.notes,
+    tags: (tagsByTrade.get(r.id) ?? []).sort((a, b) => a.name.localeCompare(b.name)),
+    mistakeIds: mistakesByTrade.get(r.id) ?? [],
+    thumb: thumbByTrade.get(r.id) ?? null,
+  }));
 }

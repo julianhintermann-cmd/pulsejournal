@@ -164,3 +164,8 @@ export function formatRelative(ts: number, now: number, timeZone: string) {
 export function dayKey(ts: number, timeZone: string) {
   return formatDateFns(zoned(ts, timeZone), "yyyy-MM-dd");
 }
+
+/** `1 Trade`, `3 Trades`. */
+export function plural(count: number, one: string, many: string) {
+  return `${count} ${count === 1 ? one : many}`;
+}
