@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="de-CH">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0A0B0F" />
+    <title>Offline · Pulse Journal</title>
+    <link rel="icon" href="/icons/favicon-32.png" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0a0b0f;
+        --surface: #111319;
+        --border: #242936;
+        --text: #eceff4;
+        --muted: #8b93a7;
+        --accent: #4f7cff;
+      }
+      @media (prefers-color-scheme: light) {
+        :root {
+          color-scheme: light;
+          --bg: #f6f7f9;
+          --surface: #ffffff;
+          --border: #e2e5eb;
+          --text: #0f1218;
+          --muted: #5d6577;
+          --accent: #3b63e6;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      main {
+        min-height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: calc(env(safe-area-inset-top) + 24px) 16px calc(env(safe-area-inset-bottom) + 24px);
+      }
+      .card {
+        width: 100%;
+        max-width: 400px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 28px 24px;
+        text-align: center;
+      }
+      img {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+      }
+      h1 {
+        font-size: 18px;
+        line-height: 26px;
+        font-weight: 600;
+        margin: 20px 0 8px;
+      }
+      p {
+        font-size: 14px;
+        line-height: 22px;
+        color: var(--muted);
+        margin: 0 0 24px;
+      }
+      button {
+        appearance: none;
+        border: 0;
+        height: 44px;
+        padding: 0 20px;
+        border-radius: 10px;
+        background: var(--accent);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="card">
+        <img src="/icons/icon-192.png" alt="" />
+        <h1>Offline</h1>
+        <p>Keine Verbindung zum Server – Pulse Journal ist nur im Heimnetz bzw. über VPN erreichbar.</p>
+        <button type="button" onclick="location.reload()">Erneut versuchen</button>
+      </div>
+    </main>
+  </body>
+</html>
