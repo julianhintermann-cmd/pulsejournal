@@ -92,6 +92,29 @@ Notes for the iOS 26 style mobile layer (viewports below 768 px). The audit and 
   Stress test (tab tap → row tap after 0–22 frames, 4× CPU throttling, invariants: one screen, no active layers,
   no running animations, the active tab matches the URL): 100/100 passed.
 
+### M5 – Modals and feedback
+
+- `IosSheet` (`src/components/ios/sheet.tsx`) replaces the phone branch of `ResponsiveDialog` (all dialogs):
+  detents from the content height (fit/medium ≈ 50 %, large ≈ 92 %), floating glass at medium (8 px inset, 36 px
+  radius), attached solid sheet at large with the card-stack effect behind (`[data-dialog-large]`: screen scales
+  to 0.94, tab bar and nav bar step away). Grabber + header (✕ glass circle, centred title, optional ✓ prominent
+  circle) drag the sheet; content drags it only when scrolled to the top (or while the sheet can still grow), so
+  scrolling and dragging hand off seamlessly. Velocity-aware snapping, rubber-band above large, dismiss below the
+  lowest detent. `dirty` asks "Änderungen verwerfen?" (action sheet) before closing. The sheet sits above the
+  keyboard (`--kb`).
+- `ActionSheet` / `IosAlert` (`src/components/ios/action-sheet.tsx`): destructive confirmations are action sheets
+  (glass group, red destructive row, separate "Abbrechen"); typed confirmations (backup restore) and
+  non-destructive ones are centred glass alerts with capsule buttons. `ConfirmDialog` switches on phones.
+- `GlassMenu` (`src/components/ios/menu.tsx`): glass popover that grows out of its button (transform-origin at the
+  trigger, spring), checkmarks, trailing icons, sections, destructive rows. The global filter capsule opens it
+  (periods + accounts); "Benutzerdefiniert…" opens a sheet with native date pickers.
+- `ContextMenu` + `useLongPress`: 450 ms, cancelled after 8 px movement, haptic, lifted static copy of the item
+  (scale 1.02, shadow) over a blurred and dimmed backdrop, glass menu next to it.
+- Banners: on phones Sonner toasts render as glass capsule banners below the Dynamic Island (3 s, swipe up to
+  dismiss, one action such as "Rückgängig"). `CheckmarkHud` (`showCheckmarkHud`, `notifySaved`): centred glass
+  square with a drawn ✓ for ~1 s after saving a trade.
+- `ActivityIndicator`: iOS 8-spoke spinner; `Redacted` placeholder with a 1.5 s opacity pulse.
+
 ## Deviations from the brief
 
 - Playwright WebKit could not be downloaded in the build sandbox (`cdn.playwright.dev` is blocked there). Local
@@ -99,5 +122,7 @@ Notes for the iOS 26 style mobile layer (viewports below 768 px). The audit and 
   `playwright.config.ts` and run in CI and on the developer's machine.
 - `src/proxy.ts`: `/launch/` (launch screen PNGs) is public like `/icons/`, because iOS loads them before any login.
   No auth logic changed.
+- Floating vs. attached sheet: the 8 px side inset and radius switch with the detent (no animated width), the
+  height change itself is a `transform` spring.
 - Hover: Tailwind 4 already wraps every `hover:` utility in `@media (hover: hover)`, so no extra gating of existing
   components was needed.

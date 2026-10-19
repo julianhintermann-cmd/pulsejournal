@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { ChipMultiSelect } from "@/components/chip-multi-select";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { FormField } from "@/components/form-field";
+import { notifySaved } from "@/components/ios/feedback";
 import { MarkdownEditor } from "@/components/markdown-editor";
 import { PnlValue } from "@/components/pnl-value";
 import { RatingInput } from "@/components/rating-input";
@@ -365,7 +366,7 @@ export function TradeForm({
       await persistScreenshots(result.data.id);
       setShotsChanged(false);
       form.reset(formValues);
-      toast.success("Trade gespeichert");
+      notifySaved("Trade gespeichert");
       router.push(`/trades/${result.data.id}`);
     });
   });

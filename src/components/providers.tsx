@@ -1,5 +1,6 @@
 "use client";
 
+import { CheckmarkHudHost } from "@/components/ios/feedback";
 import { IosRuntime } from "@/components/ios/ios-runtime";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { Toaster } from "@/components/ui/sonner";
@@ -12,6 +13,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <Toaster />
       <ServiceWorkerRegister />
       <IosRuntime />
+      <CheckmarkHudHost />
     </TooltipProvider>
   );
 }

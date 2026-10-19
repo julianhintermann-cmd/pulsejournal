@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { useApp } from "@/components/app-context";
+import { GlassMenu, type MenuSection } from "@/components/ios/menu";
 import { ResponsiveDialog } from "@/components/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -242,91 +243,98 @@ export function GlobalFilterBar({ mode }: { mode: "full" | "account" }) {
   );
 }
 
-/** Phone variant: the current value ("Dieser Monat ▾") inside the nav bar capsule, opening a sheet. */
+/**
+ * Phone variant: the current value ("Dieser Monat ▾") inside the nav bar capsule. Opens a glass menu with the
+ * periods and accounts; "Benutzerdefiniert…" opens a sheet with native date pickers.
+ */
 export function GlobalFilterSheetButton({ mode }: { mode: "full" | "account" }) {
   const state = useFilterState();
   const apply = useApplyFilter();
   const { accounts } = useApp();
-  const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState<FilterState>(state);
+  const [customOpen, setCustomOpen] = useState(false);
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
   const account = accounts.find((a) => a.id === state.accountId);
   const label = mode === "full" ? rangeLabel(state) : (account?.name ?? "Alle Konten");
 
-  const onOpenChange = (next: boolean) => {
-    if (next) setDraft({ ...state, to: state.to ?? todayKey() });
-    setOpen(next);
+  const openCustom = () => {
+    setFrom(state.from ?? "");
+    setTo(state.to ?? todayKey());
+    setCustomOpen(true);
   };
 
-  const canApply = draft.range !== "custom" || (!!draft.from && !!draft.to);
+  const sections: MenuSection[] = [
+    ...(mode === "full"
+      ? [
+          {
+            items: RANGE_KEYS.map((key) => ({
+              label: key === "custom" ? `${RANGE_LABELS[key]}…` : RANGE_LABELS[key],
+              checked: state.range === key,
+              onSelect: () => (key === "custom" ? openCustom() : apply({ ...state, range: key, from: null, to: null })),
+            })),
+          },
+        ]
+      : []),
+    {
+      items: [
+        {
+          label: "Alle Konten",
+          checked: state.accountId == null,
+          onSelect: () => apply({ ...state, accountId: null }),
+        },
+        ...accounts.map((a) => ({
+          label: `${a.name} · ${a.currency}`,
+          checked: state.accountId === a.id,
+          onSelect: () => apply({ ...state, accountId: a.id }),
+        })),
+      ],
+    },
+  ];
+
+  const applyCustom = () => {
+    if (!from || !to) return;
+    apply({ ...state, range: "custom", from, to });
+    setCustomOpen(false);
+  };
 
   return (
     <>
-      <button
-        type="button"
-        aria-label={`Filter: ${label}${mode === "full" && account ? `, ${account.name}` : ""}`}
-        onClick={() => onOpenChange(true)}
-        className="flex h-11 max-w-[11.5rem] min-w-0 items-center gap-1.5 rounded-full pr-2.5 pl-4 text-[15px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-accent"
-      >
-        {mode === "full" && account ? (
-          <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: account.color }} />
-        ) : null}
-        <span className="truncate tabular-nums">{label}</span>
-        <ChevronDown className="size-4 shrink-0 opacity-60" strokeWidth={2.4} />
-      </button>
-      <ResponsiveDialog
-        open={open}
-        onOpenChange={onOpenChange}
-        title="Filter"
-        description={`${rangeLabel(state)} · ${state.accountId ? "1 Konto" : "Alle Konten"}`}
-        footer={
-          <Button
-            disabled={!canApply}
-            onClick={() => {
-              apply(draft.range === "custom" ? draft : { ...draft, from: null, to: null });
-              setOpen(false);
-            }}
+      <GlassMenu sections={sections} label="Filter">
+        {(trigger) => (
+          <button
+            {...trigger}
+            type="button"
+            aria-label={`Filter: ${label}${mode === "full" && account ? `, ${account.name}` : ""}`}
+            className="flex h-11 max-w-[11.5rem] min-w-0 items-center gap-1.5 rounded-full pr-2.5 pl-4 text-[15px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
+            {mode === "full" && account ? (
+              <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: account.color }} />
+            ) : null}
+            <span className="truncate tabular-nums">{label}</span>
+            <ChevronDown className="size-4 shrink-0 opacity-60" strokeWidth={2.4} />
+          </button>
+        )}
+      </GlassMenu>
+      <ResponsiveDialog
+        open={customOpen}
+        onOpenChange={setCustomOpen}
+        title="Benutzerdefiniert"
+        description="Zeitraum für Statistiken und Trades"
+        confirm={{ label: "Anwenden", onConfirm: applyCustom, disabled: !from || !to }}
+        footer={
+          <Button disabled={!from || !to} onClick={applyCustom}>
             Anwenden
           </Button>
         }
       >
-        <div className="flex flex-col gap-5">
-          {mode === "full" ? (
-            <section className="flex flex-col gap-2">
-              <h3 className="text-small tracking-[0.04em] text-muted-foreground uppercase">Zeitraum</h3>
-              <div className="flex flex-wrap gap-2">
-                {RANGE_KEYS.map((key) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setDraft((d) => ({ ...d, range: key }))}
-                    className={cn(
-                      "h-9 rounded-full border px-3.5 text-[13px] font-medium transition-colors",
-                      draft.range === key
-                        ? "border-transparent bg-accent text-white"
-                        : "border-border bg-surface-2 text-muted-foreground",
-                    )}
-                  >
-                    {RANGE_LABELS[key]}
-                  </button>
-                ))}
-              </div>
-              {draft.range === "custom" ? (
-                <div className="pt-2">
-                  <CustomRangeFields
-                    from={draft.from ?? ""}
-                    to={draft.to ?? ""}
-                    onChange={(from, to) => setDraft((d) => ({ ...d, from: from || null, to: to || null }))}
-                  />
-                </div>
-              ) : null}
-            </section>
-          ) : null}
-          <section className="flex flex-col gap-2">
-            <h3 className="text-small tracking-[0.04em] text-muted-foreground uppercase">Konto</h3>
-            <AccountOptions value={draft.accountId} onSelect={(id) => setDraft((d) => ({ ...d, accountId: id }))} />
-          </section>
-        </div>
+        <CustomRangeFields
+          from={from}
+          to={to}
+          onChange={(f, t) => {
+            setFrom(f);
+            setTo(t);
+          }}
+        />
       </ResponsiveDialog>
     </>
   );
