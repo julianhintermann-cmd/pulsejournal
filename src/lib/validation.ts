@@ -122,6 +122,24 @@ export const accountBaseSchema = z.object({
 });
 export type AccountInput = z.infer<typeof accountBaseSchema>;
 
+export const accountFormSchema = z.object({
+  name: z.string().trim().min(1, MSG.required).max(80),
+  broker: z.string().max(80),
+  type: z.enum(ACCOUNT_TYPES),
+  currency: currencyCode,
+  startingBalance: numericString({ nonNegative: true }),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
+});
+export type AccountFormValues = z.infer<typeof accountFormSchema>;
+
+export const cashFormSchema = z.object({
+  type: z.enum(CASH_TYPES),
+  amount: numericString({ positive: true }),
+  occurredAt: z.string().min(1, MSG.date),
+  note: z.string().max(500),
+});
+export type CashFormValues = z.infer<typeof cashFormSchema>;
+
 export const setupSchema = z
   .object({
     username: z
@@ -193,6 +211,15 @@ export const instrumentSchema = z.object({
   tickSize: finite.positive(MSG.positive).nullable(),
 });
 export type InstrumentInput = z.infer<typeof instrumentSchema>;
+
+export const instrumentFormSchema = z.object({
+  symbol: z.string().trim().min(1, MSG.required).max(30),
+  assetClass: z.enum(ASSET_CLASSES),
+  multiplier: numericString({ positive: true }),
+  quoteCurrency: currencyCode,
+  tickSize: numericString({ optional: true, positive: true }),
+});
+export type InstrumentFormValues = z.infer<typeof instrumentFormSchema>;
 
 export const listNameSchema = z.string().trim().min(1, MSG.required).max(60);
 
@@ -303,6 +330,16 @@ export const generalSettingsSchema = z.object({
   defaultRiskPercent: finite.positive(MSG.positive).max(100),
 });
 export type GeneralSettingsInput = z.infer<typeof generalSettingsSchema>;
+
+export const generalSettingsFormSchema = z.object({
+  baseCurrency: z.enum(CURRENCIES),
+  displayTimezone: z.string().min(1, MSG.required),
+  weekStartsOn: z.enum(["0", "1", "6"]),
+  beThreshold: numericString({ nonNegative: true }),
+  defaultAccountId: z.string(),
+  defaultRiskPercent: numericString({ positive: true }),
+});
+export type GeneralSettingsFormValues = z.infer<typeof generalSettingsFormSchema>;
 
 export const appearanceSettingsSchema = z.object({
   theme: z.enum(THEMES),

@@ -1,6 +1,6 @@
 import { createHmac, randomBytes } from "node:crypto";
 
-import { and, eq, lt, ne } from "drizzle-orm";
+import { and, eq, gt, lt, ne } from "drizzle-orm";
 
 import { SESSION_RENEW_BELOW_MS, SESSION_TTL_MS } from "@/lib/auth/cookie";
 import { getSessionSecret } from "@/lib/auth/secret";
@@ -74,4 +74,12 @@ export function deleteOtherSessions(userId: string, keepSessionId: string) {
 
 export function deleteAllSessions() {
   getDb().delete(sessions).run();
+}
+
+export function countOtherSessions(userId: string, keepSessionId: string) {
+  return getDb()
+    .select({ id: sessions.id })
+    .from(sessions)
+    .where(and(eq(sessions.userId, userId), ne(sessions.id, keepSessionId), gt(sessions.expiresAt, Date.now())))
+    .all().length;
 }
