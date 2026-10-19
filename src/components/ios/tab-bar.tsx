@@ -3,7 +3,7 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { GlassButton, GlassSurface } from "@/components/ios/glass";
 import { useScrollDirection } from "@/hooks/ios/use-scroll-direction";
@@ -42,18 +42,35 @@ export function GlassTabBar() {
   const capsuleRef = useRef<HTMLDivElement>(null);
   /** index under the finger and the pill offset in item widths. */
   const [scrub, setScrub] = useState<{ index: number; offset: number } | null>(null);
+  /** Where a touch started; scrubbing begins only once the finger really moves. */
+  const press = useRef<{ x: number; id: number } | null>(null);
   const suppressClick = useRef(false);
-  const lastIndex = useRef(activeIndex);
-  const [stretch, setStretch] = useState<"left" | "right" | null>(null);
 
+  // The tapped tab is selected at once (the next screen may take a moment to arrive): the pill goes there and stays,
+  // instead of springing back to the old tab and moving again when the route commits.
+  const [pending, setPending] = useState<number | null>(null);
+  const [pendingFor, setPendingFor] = useState(pathname);
+  if (pendingFor !== pathname) {
+    setPendingFor(pathname);
+    if (pending !== null) setPending(null);
+  }
+  useEffect(() => {
+    if (pending === null) return;
+    const t = window.setTimeout(() => setPending(null), 4000); // navigation failed: show the real tab again
+    return () => window.clearTimeout(t);
+  }, [pending]);
+  const selectedIndex = pending ?? activeIndex;
+
+  const lastIndex = useRef(selectedIndex);
+  const [stretch, setStretch] = useState(false);
   // Droplet stretch while the pill travels to a new tab.
   useLayoutEffect(() => {
-    if (lastIndex.current === activeIndex) return;
-    setStretch(activeIndex > lastIndex.current ? "right" : "left");
-    lastIndex.current = activeIndex;
-    const t = window.setTimeout(() => setStretch(null), 420);
+    if (lastIndex.current === selectedIndex) return;
+    lastIndex.current = selectedIndex;
+    setStretch(true);
+    const t = window.setTimeout(() => setStretch(false), 380);
     return () => window.clearTimeout(t);
-  }, [activeIndex]);
+  }, [selectedIndex]);
 
   const go = (tab: Tab) => {
     const target = tabTarget(tab, activeKey, pathname);
@@ -63,6 +80,7 @@ export function GlassTabBar() {
     }
     if (tab.key !== activeKey) {
       // Tab switches keep each tab's scroll position; no slide animation (iOS swaps tabs instantly).
+      setPending(TABS.indexOf(tab));
       requestScrollRestore(target);
       router.push(target, { scroll: false });
     } else router.push(target);
@@ -79,16 +97,23 @@ export function GlassTabBar() {
 
   const onPointerDown = (event: React.PointerEvent) => {
     if (collapsed || event.button !== 0) return;
-    capsuleRef.current?.setPointerCapture(event.pointerId);
-    setScrub(measure(event.clientX));
+    press.current = { x: event.clientX, id: event.pointerId };
   };
   const onPointerMove = (event: React.PointerEvent) => {
-    if (!scrub) return;
+    if (!scrub) {
+      // A plain tap is a tap (the link handles it); a drag of 6 px across the bar starts scrubbing.
+      if (!press.current || Math.abs(event.clientX - press.current.x) < 6) return;
+      capsuleRef.current?.setPointerCapture?.(press.current.id);
+      haptic("selection");
+      setScrub(measure(event.clientX));
+      return;
+    }
     const next = measure(event.clientX);
     if (next.index !== scrub.index) haptic("selection");
     setScrub(next);
   };
   const onPointerUp = (event: React.PointerEvent) => {
+    press.current = null;
     if (!scrub) return;
     const { index } = measure(event.clientX);
     setScrub(null);
@@ -98,11 +123,12 @@ export function GlassTabBar() {
     go(TABS[index]);
   };
 
-  // Pill position: follows the finger while scrubbing, otherwise sits on the active tab.
-  const pillStyle: React.CSSProperties = scrub
-    ? { width: `${100 / TABS.length}%`, transform: `translateX(${scrub.offset * 100}%)`, transition: "none" }
-    : { width: `${100 / TABS.length}%`, transform: `translateX(${activeIndex * 100}%)` };
-  const highlighted = scrub ? scrub.index : activeIndex;
+  // Pill position: follows the finger while scrubbing (CSS eases the follow), otherwise sits on the selected tab.
+  const pillStyle: React.CSSProperties = {
+    width: `${100 / TABS.length}%`,
+    transform: `translateX(${(scrub ? scrub.offset : selectedIndex) * 100}%)`,
+  };
+  const highlighted = scrub ? scrub.index : selectedIndex;
   const ActiveIcon = TABS[activeIndex].icon;
 
   return (
@@ -117,13 +143,16 @@ export function GlassTabBar() {
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
-          onPointerCancel={() => setScrub(null)}
+          onPointerCancel={() => {
+            press.current = null;
+            setScrub(null);
+          }}
         >
           <div className="pointer-events-none absolute inset-y-[4px] left-[4px] right-[4px]">
-            <div className="ios-tabbar__pill-track" style={pillStyle}>
+            <div className="ios-tabbar__pill-track" style={pillStyle} data-scrubbing={scrub ? "" : undefined}>
               <div
                 className="ios-tabbar__pill"
-                data-stretch={stretch ?? undefined}
+                data-stretch={stretch && !scrub ? "" : undefined}
                 data-scrubbing={scrub ? "" : undefined}
               />
             </div>

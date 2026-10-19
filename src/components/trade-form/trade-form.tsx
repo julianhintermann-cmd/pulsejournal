@@ -567,7 +567,7 @@ export function TradeForm({
             name="direction"
             render={({ field }) => <DirectionToggle value={field.value} onChange={(d) => changeDirection(d)} />}
           />
-          <div className="grid grid-cols-[1fr_1.35fr] gap-3">
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-3 md:grid-cols-[1fr_1.35fr]">
             <FormField label="Einstieg" htmlFor="entryPrice" error={errors.entryPrice?.message}>
               <Input
                 id="entryPrice"

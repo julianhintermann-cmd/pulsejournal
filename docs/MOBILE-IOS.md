@@ -203,6 +203,18 @@ Notes for the iOS 26 style mobile layer (viewports below 768 px). The audit and 
   in Einstellungen, the stats charts that render a frame differently between runs).
 - After screenshots: `docs/mobile-after/`; side by side: `docs/mobile-compare-dark.jpg`, `docs/mobile-compare-light.jpg`.
 
+### Feedback from the iPhone
+
+- Tab bar: a tap no longer starts scrubbing (the pill jumped under the finger, sprang back to the old tab while the
+  next screen loaded and then moved again). The tapped tab is selected at once and stays selected until the route
+  arrives (4 s fallback); scrubbing starts after 6 px of horizontal movement and follows with a 140 ms ease. The pill
+  glides without overshoot (340 ms) with a centred 10 % stretch; collapse/expand has no overshoot either.
+- Collapse on scroll: expands again only after 16 px of upward scrolling, ignores the rubber band at both ends and
+  re-renders only when a flag changes (it re-rendered the tab bar on every scroll frame).
+- Quick trade form: the date/time fields overflowed the card – iOS gives `datetime-local` an intrinsic minimum width
+  wider than a `1fr` column. On phones the columns are `minmax(0, …)` (time 1.5 : 1), date fields may shrink and use
+  16 px (the no-zoom size). Tablet and desktop keep their grid.
+
 ## Running the checks
 
 ```sh
