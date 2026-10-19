@@ -143,7 +143,7 @@ Requirements: Node.js 24 and pnpm 10 (`corepack enable`).
 pnpm i                 # install dependencies
 pnpm dev               # dev server on http://localhost:3000 (set DATA_DIR=./.data to keep data in the repo folder)
 pnpm test              # unit tests (vitest)
-pnpm test:e2e          # Playwright smoke test (builds and starts the app with a temporary DATA_DIR)
+pnpm test:e2e          # Playwright: smoke test, iPhone suite (WebKit) and desktop guard – see docs/MOBILE-IOS.md
 pnpm lint              # ESLint
 pnpm typecheck         # TypeScript
 pnpm build             # production build (standalone output, `pnpm start` runs it)

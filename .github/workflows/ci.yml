@@ -54,10 +54,10 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Install Playwright Chromium
-        run: pnpm exec playwright install --with-deps chromium
+      - name: Install Playwright browsers (Chromium, WebKit for the iPhone projects)
+        run: pnpm exec playwright install --with-deps chromium webkit
 
-      - name: E2E smoke test
+      - name: E2E (smoke, iPhone suite in WebKit, desktop guard)
         run: pnpm test:e2e
 
       - name: Upload Playwright report

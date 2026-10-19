@@ -77,6 +77,7 @@ export function AccountFormDialog({
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
+      dirty={form.formState.isDirty}
       title={account ? "Konto bearbeiten" : "Neues Konto"}
       footer={
         <>

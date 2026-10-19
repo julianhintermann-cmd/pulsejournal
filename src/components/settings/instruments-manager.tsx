@@ -85,6 +85,7 @@ export function InstrumentDialog({
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
+      dirty={form.formState.isDirty}
       title={item ? `${item.symbol} bearbeiten` : "Neues Instrument"}
       description="Der Multiplikator ist der Geldwert pro 1.0 Preisbewegung pro 1 Einheit Menge."
       footer={

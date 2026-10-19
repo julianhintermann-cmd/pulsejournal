@@ -71,6 +71,8 @@ export function CalendarMonth({
               "truncate font-semibold tabular-nums",
               "text-[11px] md:text-[13px]",
               pnl > 0 ? "text-profit" : pnl < 0 ? "text-loss" : "text-muted-foreground",
+              // Phones: label colour on the tinted cell (the tint carries the sign; 11 px colour text is too faint).
+              pnl !== 0 && "max-md:text-foreground",
             )}
           >
             {formatMoneyCompact(pnl)}

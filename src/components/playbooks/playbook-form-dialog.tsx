@@ -126,6 +126,7 @@ export function PlaybookFormDialog({
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
+      dirty={form.formState.isDirty}
       title={playbook ? "Playbook bearbeiten" : "Neues Playbook"}
       className="max-w-xl"
       footer={

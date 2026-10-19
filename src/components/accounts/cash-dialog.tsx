@@ -70,6 +70,7 @@ export function CashDialog({
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
+      dirty={form.formState.isDirty}
       title="Ein-/Auszahlung erfassen"
       description={accountName}
       footer={

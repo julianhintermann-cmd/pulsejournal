@@ -55,7 +55,7 @@
     --accent-soft: rgba(79, 124, 255, 0.2);
     --profit: #30d158;
     --profit-soft: rgba(48, 209, 88, 0.18);
-    --loss: #ff453a;
+    --loss: #ff6961; /* systemRed, Increase Contrast variant: #ff453a is 4.0:1 on its own tint */
     --loss-soft: rgba(255, 69, 58, 0.18);
     --be: #ff9f0a;
     --be-soft: rgba(255, 159, 10, 0.18);
@@ -71,6 +71,7 @@
     --ios-cell-2: #2c2c2e;
     --ios-label-2: rgba(235, 235, 245, 0.6);
     --ios-label-3: rgba(235, 235, 245, 0.3);
+    --heat-shade: rgba(0, 0, 0, 0.12);
   }
 
   :root[data-theme="light"] {
@@ -81,13 +82,13 @@
     --surface-3: #e5e5ea;
     --border: rgba(60, 60, 67, 0.29);
     --text: #000000;
-    --text-muted: rgba(60, 60, 67, 0.6);
+    --text-muted: rgba(60, 60, 67, 0.74);
     --text-faint: rgba(60, 60, 67, 0.3);
     --accent: #3b63e6;
     --accent-soft: rgba(59, 99, 230, 0.12);
-    --profit: #34c759;
+    --profit: #1b6e30; /* systemGreen darkened to ≥ 4.5:1 for text (WCAG AA), also on tints */
     --profit-soft: rgba(52, 199, 89, 0.15);
-    --loss: #ff3b30;
+    --loss: #d70015; /* systemRed, Increase Contrast variant */
     --loss-soft: rgba(255, 59, 48, 0.12);
     --be: #ff9500;
     --be-soft: rgba(255, 149, 0, 0.14);
@@ -101,8 +102,9 @@
     --ios-grouped: #f2f2f7;
     --ios-cell: #ffffff;
     --ios-cell-2: #f2f2f7;
-    --ios-label-2: rgba(60, 60, 67, 0.6);
+    --ios-label-2: rgba(60, 60, 67, 0.74); /* secondaryLabel at 0.6 is 3.4:1 on grouped grey */
     --ios-label-3: rgba(60, 60, 67, 0.3);
+    --heat-shade: transparent;
   }
 
   /* ---------- iOS text styles (Dynamic Type via --dt) ---------- */
@@ -286,13 +288,13 @@
     --surface-3: #e5e5ea;
     --border: rgba(60, 60, 67, 0.29);
     --text: #000000;
-    --text-muted: rgba(60, 60, 67, 0.6);
+    --text-muted: rgba(60, 60, 67, 0.74);
     --text-faint: rgba(60, 60, 67, 0.3);
     --accent: #3b63e6;
     --accent-soft: rgba(59, 99, 230, 0.12);
-    --profit: #34c759;
+    --profit: #1b6e30; /* systemGreen darkened to ≥ 4.5:1 for text (WCAG AA), also on tints */
     --profit-soft: rgba(52, 199, 89, 0.15);
-    --loss: #ff3b30;
+    --loss: #d70015; /* systemRed, Increase Contrast variant */
     --loss-soft: rgba(255, 59, 48, 0.12);
     --be: #ff9500;
     --be-soft: rgba(255, 149, 0, 0.14);
@@ -306,8 +308,9 @@
     --ios-grouped: #f2f2f7;
     --ios-cell: #ffffff;
     --ios-cell-2: #f2f2f7;
-    --ios-label-2: rgba(60, 60, 67, 0.6);
+    --ios-label-2: rgba(60, 60, 67, 0.74); /* secondaryLabel at 0.6 is 3.4:1 on grouped grey */
     --ios-label-3: rgba(60, 60, 67, 0.3);
+    --heat-shade: transparent;
   }
 }
 
@@ -1379,7 +1382,7 @@ li + li > .ios-swipe .ios-row__body {
 }
 .ios-hero-glow {
   position: absolute;
-  inset: -40px -20px auto;
+  inset: -40px 0 auto; /* the hero is already full-bleed: wider would widen the page */
   height: 320px;
   z-index: -1;
   pointer-events: none;
@@ -1486,5 +1489,67 @@ li + li > .ios-swipe .ios-row__body {
   .ios-chip-tabs [data-slot="tabs-trigger"][data-state="active"] {
     background: var(--accent);
     color: #fff;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+ * Debug overlay (?debug=1): never rendered otherwise.
+ * ------------------------------------------------------------------------------------------------------------- */
+.ios-debug {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+  font:
+    500 10px/1.35 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+}
+.ios-debug__safe {
+  position: absolute;
+  inset: 0;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background-clip: content-box;
+  outline: 1px dashed rgb(255 59 48 / 0.7);
+  outline-offset: -1px;
+}
+.ios-debug__safe::after {
+  content: "";
+  position: absolute;
+  inset: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  border: 1px dashed rgb(52 199 89 / 0.8);
+}
+.ios-debug__panel {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 4px);
+  left: calc(env(safe-area-inset-left) + 4px);
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 0 8px;
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 0.78);
+  color: #fff;
+}
+.ios-debug__panel dt {
+  color: rgb(235 235 245 / 0.6);
+}
+.ios-debug__panel dd {
+  margin: 0;
+}
+.ios-debug__flags {
+  grid-column: 1 / -1;
+  color: #64d2ff;
+}
+.ios-debug__bad {
+  color: #ff453a;
+}
+
+/* Calendar heat cells: a shade in dark mode keeps the white digits at 4.5:1 on the strongest tint. */
+@media (max-width: 767px) {
+  button[data-day][style*="color-mix"] {
+    box-shadow: inset 0 0 0 100vmax var(--heat-shade, transparent);
   }
 }

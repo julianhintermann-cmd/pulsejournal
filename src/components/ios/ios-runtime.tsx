@@ -1,9 +1,26 @@
 "use client";
 
-import { useEffect } from "react";
+import dynamic from "next/dynamic";
+import { useEffect, useSyncExternalStore } from "react";
 
 import { startKeyboardTracking } from "@/hooks/ios/use-keyboard-inset";
 import { applyReducedTransparency, REDUCE_TRANSPARENCY_KEY } from "@/hooks/ios/use-reduced-transparency";
+
+const DebugOverlay = dynamic(() => import("./debug-overlay").then((m) => m.DebugOverlay), { ssr: false });
+const DEBUG_KEY = "pulse.debug";
+
+/** `?debug=1` turns the overlay on for this tab (survives client navigation), `?debug=0` turns it off. */
+function readDebug() {
+  const param = new URLSearchParams(window.location.search).get("debug");
+  try {
+    if (param === "1") sessionStorage.setItem(DEBUG_KEY, "1");
+    if (param === "0") sessionStorage.removeItem(DEBUG_KEY);
+    return sessionStorage.getItem(DEBUG_KEY) === "1";
+  } catch {
+    return param === "1";
+  }
+}
+const noSubscribe = () => () => undefined;
 
 const FIELD = "input:not([type=checkbox]):not([type=radio]):not([type=file]), textarea, select";
 
@@ -17,9 +34,10 @@ function isStandalone() {
 /**
  * Document-level iOS behaviour that has no visual output: keyboard inset (--kb), standalone flag, pinch-zoom lock
  * for the home-screen app (except inside [data-allow-zoom], e.g. the screenshot lightbox), reduced transparency and
- * keeping the focused field above the keyboard.
+ * keeping the focused field above the keyboard. Renders only the `?debug=1` overlay.
  */
 export function IosRuntime() {
+  const debug = useSyncExternalStore(noSubscribe, readDebug, () => false);
   useEffect(() => {
     startKeyboardTracking();
     applyReducedTransparency();
@@ -73,5 +91,5 @@ export function IosRuntime() {
       window.clearTimeout(timer);
     };
   }, []);
-  return null;
+  return debug ? <DebugOverlay /> : null;
 }

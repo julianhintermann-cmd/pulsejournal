@@ -66,5 +66,10 @@ test("setup, account, quick trade, dashboard, list, logout and login", async ({ 
   await page.getByRole("button", { name: "Anmelden" }).click();
   await expect(page).toHaveURL(/\/$/);
   // Desktop greets with a heading, phones with a line under the large title.
-  await expect(page.getByText(new RegExp(`, ${USER}`)).filter({ visible: true }).first()).toBeVisible();
+  await expect(
+    page
+      .getByText(new RegExp(`, ${USER}`))
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible();
 });

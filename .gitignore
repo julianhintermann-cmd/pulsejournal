@@ -9,6 +9,7 @@ next-env.d.ts
 /.data
 playwright-report
 test-results
+tests/e2e/.auth
 coverage
 .DS_Store
 /.localbin

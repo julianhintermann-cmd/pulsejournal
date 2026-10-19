@@ -159,6 +159,91 @@ Notes for the iOS 26 style mobile layer (viewports below 768 px). The audit and 
 - Tablet and desktop: every phone variant is `md:hidden`, every web variant `max-md:hidden`; the desktop screenshot
   diff shows only dynamic content (time of day, build date, session count).
 
+### M8 – Accessibility, performance, tests
+
+- Debug overlay: append `?debug=1` to any URL (stays on for the tab, `?debug=0` turns it off). Shows FPS and slow
+  frames (> 20 ms), visible glass layers against the budget of 5 (red when over), safe-area insets (red/green dashed
+  guides), `--kb` (keyboard), `--dt` (Dynamic Type), viewport and the flags standalone · dark/light ·
+  reduced-motion · reduced-transparency · increased-contrast · keyboard · presented. Loaded lazily, nothing is
+  rendered without the parameter.
+- Playwright projects (`playwright.config.ts`): `iphone-16-pro` (402 × 874 @3x, dark, full suite),
+  `iphone-16-pro-light`, `iphone-16-pro-max` (440 × 956), `iphone-se` (375 × 667, light, plus the 320 px run),
+  `iphone-16-pro-reduced-motion` and `desktop` (1440/1024/768 guard). All iPhone projects run in WebKit with touch,
+  iPhone user agent and DPR; a second server with the demo data (`SEED_DEMO=true`) serves them, the smoke test keeps
+  its empty instance. CI installs Chromium and WebKit and runs everything.
+- Specs (`tests/e2e/ios/`):
+  - `navigation`: tabs and `aria-current`, push/pop with scroll memory, edge swipe (complete and cancel), tap on
+    the active tab scrolls up, large title → inline title, the stack race (20 rounds of tab + row taps at random
+    frame offsets, CPU ×4 in Chromium).
+  - `modals`: + presents the trade sheet with the card stack, dirty form asks before discarding, form sheet
+    opens large and drag-dismisses, dirty sheet asks before a swipe closes it, delete asks with an action sheet.
+  - `lists`: swipe actions both edges, full swipe deletes with undo, long-press menu, pull to refresh, chart
+    scrubbing, range presets.
+  - `layout` (all four phone projects): no horizontal scroll on 14 screens (and at 320 px), ≤ 5 glass layers
+    (read from the debug overlay), every interactive element has a name, 44 pt targets in the chrome, fields ≥ 16 px
+    (no zoom on focus) with `enterkeyhint`, keyboard inset → `--kb` and the tab bar moves away, WCAG AA text contrast.
+  - `reduced-motion`: push/pop use no translate keyframes, the edge swipe is off.
+  - `desktop`: no phone chrome, stack layer or presented state at 1440/1024/768, root font size unchanged.
+- Gestures: in Chromium the `finger` fixture sends real touches through CDP; WebKit has no touch-move API, so it gets
+  synthetic pointer + touch events on the touched element (implicit capture). The synthetic path is verified in
+  Chromium with `SYNTHETIC_TOUCH=1`.
+- Findings fixed by the suite: the dashboard hero glow widened the page by 20 px (the fixed nav bar grew with it and
+  cut off its trailing button); form sheets (Konto, Buchung, Playbook, Instrument) now ask "Änderungen verwerfen?"
+  before a swipe or ✕ discards input; light mode text colours raised to WCAG AA (see deviations).
+- Desktop/tablet: `python3 tests/visual/compare.py BEFORE AFTER` on two `capture.mjs --set desktop` runs. Only the
+  known dynamic regions differ (time-of-day greeting, current time in the trade form, build date and session count
+  in Einstellungen, the stats charts that render a frame differently between runs).
+- After screenshots: `docs/mobile-after/`; side by side: `docs/mobile-compare-dark.jpg`, `docs/mobile-compare-light.jpg`.
+
+## Running the checks
+
+```sh
+pnpm lint && pnpm typecheck && pnpm test            # static checks and unit tests
+pnpm test:e2e                                        # smoke + iPhone suite (WebKit) + desktop guard
+IOS_BROWSER=chromium pnpm test:e2e                   # where WebKit cannot be installed
+pnpm exec playwright test --project=iphone-se        # one device
+STACK_RACE_ROUNDS=100 pnpm exec playwright test -g "broken stack"
+node tests/visual/capture.mjs --base http://localhost:3000 --out docs/mobile-after --set mobile
+```
+
+On Windows: `pnpm exec playwright install webkit` once, then the same commands; `--browser webkit` for
+`capture.mjs`.
+
+## Manual check on an iPhone
+
+Playwright WebKit is not iOS Safari: blur rendering, the software keyboard, haptics, rubber banding and the
+home-screen app need a device. Before a release, on an iPhone with iOS 26 (Safari and the app from the home screen):
+
+1. Install: Safari → Teilen → Zum Home-Bildschirm. Launch screen in the right colour (dark/light), no white flash,
+   status bar readable on both themes.
+2. Tab bar: tabs switch instantly, the pill follows a scrub with a haptic tick, scrolling down collapses the bar,
+   the + button opens the quick trade sheet.
+3. Stack: open a trade, swipe back from the left edge (slow + cancel, fast flick), the list keeps its position;
+   tapping the active tab scrolls up.
+4. Sheets: global filter (medium detent, drag up to large), Neues Konto (large, card stack behind), typing then
+   swiping down asks "Änderungen verwerfen?". The keyboard pushes the sheet up and the focused field stays visible.
+5. Trades list: swipe left/right, full swipe delete + Rückgängig in the banner, long press menu with the preview,
+   pull to refresh with a haptic at the threshold.
+6. Übersicht: scrub the chart (number and date follow, haptic on start), range presets.
+7. Trade form: Schnell/Detailliert, decimal keyboard with "Weiter", ✓ saves with the checkmark HUD; no zoom on any
+   field.
+8. Screenshots: carousel swipe, lightbox pinch zoom, swipe down to close.
+9. Settings → Bedienungshilfen: Bewegung reduzieren (crossfades, no edge swipe), Transparenz reduzieren (solid
+   chrome), Kontrast erhöhen (stronger rims), Textgrösse gross (layouts reflow, nothing clipped), VoiceOver (tab bar,
+   back button, rows and menus are announced with names).
+10. Rotate to landscape: safe areas left/right respected, nothing behind the Dynamic Island.
+11. `?debug=1`: FPS stays near 60 (120 on ProMotion) while scrolling the trades list, glass layers ≤ 5.
+
+## Accessibility results
+
+- Text contrast (WCAG AA, 4.5:1, large text 3:1) passes on every checked screen in dark and light, checked by the
+  `layout` spec. The brand accent (prominent buttons, accent labels) is held to 3:1 like Apple's tint colour.
+- Every visible button and link has an accessible name; swipe actions are reachable through the context menu and the
+  detail screen; the debug overlay and decorative layers are `aria-hidden`.
+- Reduced motion, reduced transparency and increased contrast are honoured (system settings and the in-app switch
+  "Transparenz reduzieren").
+- Dynamic Type: iOS text styles scale with the system text size (`--dt`, 0.82–1.35).
+
 ## Deviations from the brief
 
 - Playwright WebKit could not be downloaded in the build sandbox (`cdn.playwright.dev` is blocked there). Local
@@ -178,3 +263,11 @@ Notes for the iOS 26 style mobile layer (viewports below 768 px). The audit and 
   with previews that need the full screen height.
 - Theme choice in Einstellungen stays a segmented control in the row instead of a pushed selection list.
 - The lightbox fades and scales on dismiss instead of flying back into the exact thumbnail frame.
+- Colours, light mode: Apple's systemGreen (#34C759) and systemRed (#FF3B30) reach only 2.0:1 and 3.2–3.6:1 as text
+  and secondaryLabel (60 60 67 / 0.6) 3.4:1 on grouped grey. Phones use #1B6E30, #D70015 (Apple's Increase Contrast
+  red) and secondaryLabel at 0.74 instead. Dark mode uses Apple's Increase Contrast red #FF6961 (#FF453A is 4.0:1 on
+  its own tint). Calendar heat cells show their numbers in the label colour on phones (with a light shade in dark
+  mode); the tint and the sign carry the direction.
+- White text on the brand accent (#4F7CFF / #3B63E6) is 3.7–3.8:1, below 4.5:1 for small text – the same as Apple's
+  own prominent buttons on systemBlue. Kept for the brand; held to 3:1 in the contrast test.
+- Playwright WebKit gestures are synthetic events (no touch-move API in WebKit); the real-touch path runs in Chromium.
